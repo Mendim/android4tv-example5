@@ -1,0 +1,81 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.iwedia.exampleip.MainActivity" >
+    <VideoView
+        android:id="@+id/videoView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+    <!-- Teletext and subtitle surface view -->
+    <SurfaceView
+        android:id="@+id/surfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+    <!-- Channel name and number -->
+    <LinearLayout
+        android:id="@+id/linearlayout_channel_container"
+        android:layout_width="@dimen/width_channel_change"
+        android:layout_height="@dimen/height_channel_change"
+        android:layout_margin="@dimen/margin_channel_change"
+        android:background="@drawable/channel_change_selector"
+        android:orientation="vertical"
+        android:padding="@dimen/padding_channel_change" >
+        <TextView
+            android:id="@+id/textview_channel_number"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.5"
+            android:background="@android:color/black"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/text_size_channel_change_number"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/textview_channel_name"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.5"
+            android:background="@android:color/darker_gray"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/text_size_channel_change_name"
+            android:textStyle="bold" />
+    </LinearLayout>
+    <!-- Info banner -->
+    <RelativeLayout
+        android:id="@+id/pvr_info_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/channel_change_selector"
+        android:padding="15dp"
+        android:visibility="gone" >
+        <TextView
+            android:id="@+id/textViewPosition"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:text="00:00:00"
+            android:textColor="@android:color/white" />
+        <TextView
+            android:id="@+id/textViewAvailablePosition"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:text="--:--:--"
+            android:textColor="@android:color/white" />
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_toLeftOf="@+id/textViewAvailablePosition"
+            android:layout_toRightOf="@+id/textViewPosition" />
+    </RelativeLayout>
+</RelativeLayout>
