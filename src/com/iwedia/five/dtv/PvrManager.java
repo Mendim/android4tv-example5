@@ -12,15 +12,23 @@ package com.iwedia.five.dtv;
 
 import com.iwedia.dtv.pvr.IPvrCallback;
 import com.iwedia.dtv.pvr.IPvrControl;
+import com.iwedia.dtv.pvr.MediaInfo;
 import com.iwedia.dtv.pvr.TimeshiftInfo;
 import com.iwedia.dtv.types.InternalException;
 
+import java.util.ArrayList;
+
+/**
+ * Class for PVR related functions.
+ */
 public class PvrManager {
     private IPvrControl mPvrControl;
     private int mPvrSpeed = PvrSpeedMode.PVR_SPEED_PAUSE;
     private int mSpeedIndexBackward = 0, mSpeedIndexForward = 0;
     private IPvrCallback mPvrCallback;
-    private boolean timeShftActive = false, pvrActive = false;
+    private boolean timeShftActive = false, pvrActive = false,
+            pvrPlaybackActive = false;
+    private MediaInfo mCurrentRecord = null;
     private static PvrManager instance = null;
 
     protected static PvrManager getInstance(IPvrControl pvrControl) {
@@ -34,27 +42,52 @@ public class PvrManager {
         mPvrControl = pvrControl;
     }
 
+    /**
+     * Starts timeshift operation.
+     * 
+     * @throws InternalException
+     */
     public void startTimeShift() throws InternalException {
         resetSpeedIndexes();
+        mPvrSpeed = PvrSpeedMode.PVR_SPEED_PAUSE;
         mPvrControl.startTimeshift(DVBManager.getInstance()
                 .getPlaybackRouteIDMain());
     }
 
+    /**
+     * Stops timeshift operation.
+     * 
+     * @throws InternalException
+     */
     public void stopTimeShift() throws InternalException {
         resetSpeedIndexes();
+        mPvrSpeed = PvrSpeedMode.PVR_SPEED_PAUSE;
         mPvrControl.stopTimeshift(DVBManager.getInstance()
                 .getPlaybackRouteIDMain(), false);
     }
 
+    /**
+     * Returns timeshift playback information.
+     * 
+     * @return Timeshift playback info.
+     */
     public TimeshiftInfo getTimeShiftInfo() {
         return mPvrControl.getTimeshiftInfo(DVBManager.getInstance()
                 .getPlaybackRouteIDMain());
     }
 
+    /**
+     * Returns size of timeshift buffer.
+     * 
+     * @return Size of timeshift buffer.
+     */
     public int getTimeShiftBufferSize() {
         return mPvrControl.getTimeshiftBufferSize();
     }
 
+    /**
+     * Changes playback speed.
+     */
     public void fastForward() {
         mSpeedIndexBackward = 0;
         if (mSpeedIndexForward < PvrSpeedMode.SPEED_ARRAY_FORWARD.length) {
@@ -63,6 +96,9 @@ public class PvrManager {
         }
     }
 
+    /**
+     * Changes playback speed.
+     */
     public void rewind() {
         mSpeedIndexForward = 0;
         if (mSpeedIndexBackward < PvrSpeedMode.SPEED_ARRAY_REWIND.length) {
@@ -83,11 +119,20 @@ public class PvrManager {
                 .getPlaybackRouteIDMain(), speed);
     }
 
+    /**
+     * Registers PVR callback.
+     * 
+     * @param callback
+     *        Callback to register.
+     */
     public void registerPvrCallback(IPvrCallback callback) {
         mPvrCallback = callback;
         mPvrControl.registerCallback(callback);
     }
 
+    /**
+     * Unregisters PVR callback.
+     */
     public void unregisterPvrCallback() {
         if (mPvrCallback != null) {
             mPvrControl.unregisterCallback(mPvrCallback);
@@ -109,14 +154,72 @@ public class PvrManager {
                 .isIpAndSomeOtherTunerType() ? 1 : 0)));
     }
 
+    /**
+     * Stops one touch PVR recording.
+     */
     public void stopPvr() {
         resetSpeedIndexes();
         mPvrControl.destroyRecord(0);
     }
 
+    /**
+     * Reset speed related indexes.
+     */
     public void resetSpeedIndexes() {
         mSpeedIndexBackward = 0;
         mSpeedIndexForward = 0;
+    }
+
+    /**
+     * Retrieves list of recorded media.
+     * 
+     * @return List of recorded media.
+     */
+    public ArrayList<MediaInfo> getPvrRecordings() {
+        ArrayList<MediaInfo> records = new ArrayList<MediaInfo>();
+        int numberOfMediaRecords = mPvrControl.updateMediaList();
+        for (int i = 0; i < numberOfMediaRecords; i++) {
+            records.add(mPvrControl.getMediaInfo(i));
+        }
+        return records;
+    }
+
+    /**
+     * Delete PVR record.
+     * 
+     * @param index
+     *        of record to delete.
+     */
+    public void deleteRecord(int index) {
+        mPvrControl.deleteMedia(index);
+    }
+
+    /**
+     * Starts PVR playback.
+     * 
+     * @param recordIndex
+     *        Index of record to play.
+     * @throws InternalException
+     */
+    public void startPlayback(int recordIndex) throws InternalException {
+        resetSpeedIndexes();
+        mPvrSpeed = PvrSpeedMode.PVR_SPEED_FORWARD_X1;
+        mCurrentRecord = getPvrRecordings().get(recordIndex);
+        mPvrControl.startPlayback(DVBManager.getInstance()
+                .getPlaybackRouteIDMain(), recordIndex);
+    }
+
+    /**
+     * Stops PVR playback.
+     * 
+     * @throws InternalException
+     */
+    public void stopPlayback() throws InternalException {
+        resetSpeedIndexes();
+        mPvrSpeed = PvrSpeedMode.PVR_SPEED_PAUSE;
+        mCurrentRecord = null;
+        mPvrControl.stopPlayback(DVBManager.getInstance()
+                .getPlaybackRouteIDMain());
     }
 
     public int getPvrSpeed() {
@@ -141,5 +244,17 @@ public class PvrManager {
 
     public void setPvrActive(boolean pvrActive) {
         this.pvrActive = pvrActive;
+    }
+
+    public boolean isPvrPlaybackActive() {
+        return pvrPlaybackActive;
+    }
+
+    public void setPvrPlaybackActive(boolean pvrPlaybackActive) {
+        this.pvrPlaybackActive = pvrPlaybackActive;
+    }
+
+    public MediaInfo getCurrentRecord() {
+        return mCurrentRecord;
     }
 }

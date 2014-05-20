@@ -10,6 +10,7 @@
  */
 package com.iwedia.five;
 
+import android.app.Dialog;
 import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
@@ -37,6 +38,7 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.iwedia.dtv.pvr.IPvrCallback;
+import com.iwedia.dtv.pvr.MediaInfo;
 import com.iwedia.dtv.pvr.PvrEventMediaAdd;
 import com.iwedia.dtv.pvr.PvrEventMediaRemove;
 import com.iwedia.dtv.pvr.PvrEventPlaybackJump;
@@ -80,6 +82,7 @@ public class MainActivity extends DTVActivity {
     /** Subtitle and teletext views */
     private SurfaceView mSurfaceView;
     private ChannelListDialog mChannelListDialog;
+    private RecordListDialog mRecordListDialog;
     /**
      * PVR and Time shift stuff.
      */
@@ -173,6 +176,7 @@ public class MainActivity extends DTVActivity {
 
         @Override
         public void eventRecordRemove(PvrEventRecordRemove arg0) {
+            Log.d(TAG, "\n\n\nRECORD REMOVED: " + arg0.getTitle());
         }
 
         @Override
@@ -193,18 +197,50 @@ public class MainActivity extends DTVActivity {
 
         @Override
         public void eventPlaybackStop(PvrEventPlaybackStop arg0) {
+            Log.d(TAG, "\n\n\nRECORD EVENT PLAYBACK STOPPED: ");
+            mDVBManager.getPvrManager().setPvrPlaybackActive(false);
+            Message.obtain(mHandler, UiHandler.SHOW_RECORDS_DIALOG,
+                    mRecordListDialog).sendToTarget();
         }
 
         @Override
         public void eventPlaybackStart(PvrEventPlaybackStart arg0) {
+            Log.d(TAG, "\n\n\nRECORD EVENT PLAYBACK STARTED: ");
+            mDVBManager.getPvrManager().setPvrPlaybackActive(true);
+            Message.obtain(mHandler, UiHandler.HIDE_RECORDS_DIALOG,
+                    mRecordListDialog).sendToTarget();
         }
 
         @Override
         public void eventPlaybackSpeed(PvrEventPlaybackSpeed arg0) {
+            Log.d(TAG, "\n\n\nRECORD EVENT PLAYBACK SPEED: " + arg0.getSpeed());
+            mDVBManager.getPvrManager().setmPvrSpeedConst(arg0.getSpeed());
         }
 
         @Override
-        public void eventPlaybackPosition(PvrEventPlaybackPosition arg0) {
+        public void eventPlaybackPosition(
+                PvrEventPlaybackPosition pvrEventPlaybackPosition) {
+            Log.d(TAG, "\n\n\nRECORD EVENT PLAYBACK POSITION: "
+                    + pvrEventPlaybackPosition.getTimePosition());
+            if (pvrEventPlaybackPosition.isBegin()) {
+                mDVBManager.getPvrManager().resetSpeedIndexes();
+                mDVBManager.getPvrManager().setPvrSpeed(
+                        PvrSpeedMode.PVR_SPEED_FORWARD_X1);
+            } else if (pvrEventPlaybackPosition.isEnd()) {
+                try {
+                    mDVBManager.getPvrManager().stopPlayback();
+                } catch (InternalException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                MediaInfo playBackRecord = mDVBManager.getPvrManager()
+                        .getCurrentRecord();
+                Message.obtain(
+                        mHandler,
+                        UiHandler.REFRESH_PVR_RECORD_PLAYBACK,
+                        new PvrPlaybackPositionHolder(playBackRecord,
+                                pvrEventPlaybackPosition)).sendToTarget();
+            }
         }
 
         @Override
@@ -213,10 +249,12 @@ public class MainActivity extends DTVActivity {
 
         @Override
         public void eventMediaRemove(PvrEventMediaRemove arg0) {
+            Log.d(TAG, "\n\n\nRECORD EVENT MEDIA REMOVE: " + arg0.getTitle());
         }
 
         @Override
         public void eventMediaAdd(PvrEventMediaAdd arg0) {
+            Log.d(TAG, "\n\n\nRECORD EVENT MEDIA ADD: " + arg0.getTitle());
         }
 
         @Override
@@ -239,7 +277,7 @@ public class MainActivity extends DTVActivity {
         /** Load default IP channel list. */
         initIpChannels();
         /** Initialize channel list dialog. */
-        initializeChannelListDialog();
+        initializeDialogs();
         /** Initialize Handler. */
         mHandler = new UiHandler(mChannelContainer, mPvrInfoContainer,
                 mSurfaceView);
@@ -287,6 +325,10 @@ public class MainActivity extends DTVActivity {
                 sIpChannels = ipChannels;
                 return true;
             }
+            case R.id.menu_records: {
+                mRecordListDialog.show();
+                return true;
+            }
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -327,14 +369,17 @@ public class MainActivity extends DTVActivity {
         mSurfaceView.setZOrderOnTop(true);
     }
 
-    private void initializeChannelListDialog() {
+    private void initializeDialogs() {
         mChannelListDialog = new ChannelListDialog(this);
-        mChannelListDialog.setOnCancelListener(new OnCancelListener() {
+        mRecordListDialog = new RecordListDialog(this);
+        OnCancelListener listener = new OnCancelListener() {
             @Override
             public void onCancel(DialogInterface dialog) {
                 refreshSurfaceView(mSurfaceView);
             }
-        });
+        };
+        mChannelListDialog.setOnCancelListener(listener);
+        mRecordListDialog.setOnCancelListener(listener);
     }
 
     /**
@@ -388,6 +433,10 @@ public class MainActivity extends DTVActivity {
                 && !isTimeShiftKey(keyCode)) {
             return true;
         }
+        if (mDVBManager.getPvrManager().isPvrPlaybackActive()
+                && !isPvrPlaybackKey(keyCode)) {
+            return true;
+        }
         switch (keyCode) {
         /** Open Channel List. */
             case KeyEvent.KEYCODE_DPAD_CENTER: {
@@ -430,7 +479,8 @@ public class MainActivity extends DTVActivity {
              */
             case KeyEvent.KEYCODE_INFO: {
                 if (mDVBManager.getPvrManager().isTimeShftActive()
-                        || mDVBManager.getPvrManager().isPvrActive()) {
+                        || mDVBManager.getPvrManager().isPvrActive()
+                        || mDVBManager.getPvrManager().isPvrPlaybackActive()) {
                     showPvrInfo();
                     return true;
                 }
@@ -439,7 +489,8 @@ public class MainActivity extends DTVActivity {
                 return true;
             }
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: {
-                if (mDVBManager.getPvrManager().isTimeShftActive()) {
+                if (mDVBManager.getPvrManager().isTimeShftActive()
+                        || mDVBManager.getPvrManager().isPvrPlaybackActive()) {
                     if (mDVBManager.getPvrManager().getPvrSpeed() == PvrSpeedMode.PVR_SPEED_PAUSE) {
                         mDVBManager.getPvrManager().setPvrSpeed(
                                 PvrSpeedMode.PVR_SPEED_FORWARD_X1);
@@ -458,7 +509,13 @@ public class MainActivity extends DTVActivity {
                 return true;
             }
             case KeyEvent.KEYCODE_MEDIA_STOP: {
-                if (mDVBManager.getPvrManager().isTimeShftActive()) {
+                if (mDVBManager.getPvrManager().isPvrPlaybackActive()) {
+                    try {
+                        mDVBManager.getPvrManager().stopPlayback();
+                    } catch (InternalException e) {
+                        e.printStackTrace();
+                    }
+                } else if (mDVBManager.getPvrManager().isTimeShftActive()) {
                     try {
                         mDVBManager.getPvrManager().stopTimeShift();
                     } catch (InternalException e) {
@@ -471,7 +528,7 @@ public class MainActivity extends DTVActivity {
             }
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD: {
                 if (mDVBManager.getPvrManager().isTimeShftActive()
-                        || mDVBManager.getPvrManager().isPvrActive()) {
+                        || mDVBManager.getPvrManager().isPvrPlaybackActive()) {
                     mDVBManager.getPvrManager().fastForward();
                     showPvrInfo();
                 }
@@ -479,7 +536,7 @@ public class MainActivity extends DTVActivity {
             }
             case KeyEvent.KEYCODE_MEDIA_REWIND: {
                 if (mDVBManager.getPvrManager().isTimeShftActive()
-                        || mDVBManager.getPvrManager().isPvrActive()) {
+                        || mDVBManager.getPvrManager().isPvrPlaybackActive()) {
                     mDVBManager.getPvrManager().rewind();
                     showPvrInfo();
                 }
@@ -520,7 +577,8 @@ public class MainActivity extends DTVActivity {
         /** Message ID for Hiding Channel Number/Name View. */
         public static final int HIDE_CHANNEL_INFO_VIEW_MESSAGE = 0,
                 HIDE_PVR_INFO_MESSAGE = 1, REFRESH_TIMESHIFT_PLAYBACK = 2,
-                REFRESH_PVR_PLAYBACK = 3;
+                REFRESH_PVR_PLAYBACK = 3, SHOW_RECORDS_DIALOG = 4,
+                HIDE_RECORDS_DIALOG = 5, REFRESH_PVR_RECORD_PLAYBACK = 6;
         private View mChannelContainer, mPvrContainer;
         /** PVR info container views */
         private TextView mPvrInfoPosition, mPvrInfoAvailablePosition;
@@ -585,6 +643,29 @@ public class MainActivity extends DTVActivity {
                     mPvrProgressBar.setMax(numberOfSeconds);
                     break;
                 }
+                case REFRESH_PVR_RECORD_PLAYBACK: {
+                    PvrPlaybackPositionHolder holder = (PvrPlaybackPositionHolder) msg.obj;
+                    int numberOfSeconds = holder.getPositionObject()
+                            .getTimePosition();
+                    Date date = new Date(numberOfSeconds * 1000);
+                    mPvrInfoPosition.setText(sFormat.format(date));
+                    mPvrProgressBar.setProgress(numberOfSeconds);
+                    numberOfSeconds = holder.getPvrMediaInfo().getDuration();
+                    date = new Date(numberOfSeconds * 1000);
+                    mPvrInfoAvailablePosition.setText(sFormat.format(date));
+                    mPvrProgressBar.setMax(numberOfSeconds);
+                    break;
+                }
+                case SHOW_RECORDS_DIALOG: {
+                    Dialog dialog = (Dialog) msg.obj;
+                    dialog.show();
+                    break;
+                }
+                case HIDE_RECORDS_DIALOG: {
+                    Dialog dialog = (Dialog) msg.obj;
+                    dialog.cancel();
+                    break;
+                }
             }
         }
     }
@@ -592,6 +673,20 @@ public class MainActivity extends DTVActivity {
     private boolean isPvrKey(int keyCode) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_INFO:
+            case KeyEvent.KEYCODE_MEDIA_STOP: {
+                return true;
+            }
+            default:
+                return false;
+        }
+    }
+
+    private boolean isPvrPlaybackKey(int keyCode) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_INFO:
+            case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+            case KeyEvent.KEYCODE_MEDIA_REWIND:
+            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
             case KeyEvent.KEYCODE_MEDIA_STOP: {
                 return true;
             }
@@ -630,6 +725,26 @@ public class MainActivity extends DTVActivity {
         }
 
         public PvrEventTimeshiftPosition getPositionObject() {
+            return mPositionObject;
+        }
+    }
+
+    private class PvrPlaybackPositionHolder {
+        private MediaInfo mPvrMediaInfo;
+        private PvrEventPlaybackPosition mPositionObject;
+
+        public PvrPlaybackPositionHolder(MediaInfo pvrMediaInfo,
+                PvrEventPlaybackPosition mPositionObject) {
+            super();
+            this.mPvrMediaInfo = pvrMediaInfo;
+            this.mPositionObject = mPositionObject;
+        }
+
+        public MediaInfo getPvrMediaInfo() {
+            return mPvrMediaInfo;
+        }
+
+        public PvrEventPlaybackPosition getPositionObject() {
             return mPositionObject;
         }
     }
