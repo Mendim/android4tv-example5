@@ -82,7 +82,6 @@ public class RecordListDialog extends Dialog implements OnItemSelectedListener,
                             e.printStackTrace();
                         }
                         dialog.dismiss();
-                        RecordListDialog.this.cancel();
                     }
                 });
         builderSingle.setNegativeButton("Delete",
