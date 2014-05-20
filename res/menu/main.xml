@@ -21,4 +21,8 @@
         android:id="@+id/menu_scan_usb"
         android:orderInCategory="100"
         android:title="Load IP channel list from USB"/>
+    <item
+        android:id="@+id/menu_records"
+        android:orderInCategory="100"
+        android:title="Open PVR recorded media"/>
 </menu>

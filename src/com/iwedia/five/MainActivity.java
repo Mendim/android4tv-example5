@@ -80,6 +80,7 @@ public class MainActivity extends DTVActivity {
     /** Subtitle and teletext views */
     private SurfaceView mSurfaceView;
     private ChannelListDialog mChannelListDialog;
+    private RecordListDialog mRecordListDialog;
     /**
      * PVR and Time shift stuff.
      */
@@ -173,6 +174,7 @@ public class MainActivity extends DTVActivity {
 
         @Override
         public void eventRecordRemove(PvrEventRecordRemove arg0) {
+            Log.d(TAG, "\n\n\nRECORD REMOVED: " + arg0.getTitle());
         }
 
         @Override
@@ -193,18 +195,24 @@ public class MainActivity extends DTVActivity {
 
         @Override
         public void eventPlaybackStop(PvrEventPlaybackStop arg0) {
+            Log.d(TAG, "\n\n\nRECORD EVENT PLAYBACK STOPPED: ");
         }
 
         @Override
         public void eventPlaybackStart(PvrEventPlaybackStart arg0) {
+            Log.d(TAG, "\n\n\nRECORD EVENT PLAYBACK STARTED: ");
         }
 
         @Override
         public void eventPlaybackSpeed(PvrEventPlaybackSpeed arg0) {
+            Log.d(TAG, "\n\n\nRECORD EVENT PLAYBACK SPEED: " + arg0.getSpeed());
         }
 
         @Override
         public void eventPlaybackPosition(PvrEventPlaybackPosition arg0) {
+            Log.d(TAG,
+                    "\n\n\nRECORD EVENT PLAYBACK POSITION: "
+                            + arg0.getTimePosition());
         }
 
         @Override
@@ -213,10 +221,12 @@ public class MainActivity extends DTVActivity {
 
         @Override
         public void eventMediaRemove(PvrEventMediaRemove arg0) {
+            Log.d(TAG, "\n\n\nRECORD EVENT MEDIA REMOVE: " + arg0.getTitle());
         }
 
         @Override
         public void eventMediaAdd(PvrEventMediaAdd arg0) {
+            Log.d(TAG, "\n\n\nRECORD EVENT MEDIA ADD: " + arg0.getTitle());
         }
 
         @Override
@@ -239,7 +249,7 @@ public class MainActivity extends DTVActivity {
         /** Load default IP channel list. */
         initIpChannels();
         /** Initialize channel list dialog. */
-        initializeChannelListDialog();
+        initializeDialogs();
         /** Initialize Handler. */
         mHandler = new UiHandler(mChannelContainer, mPvrInfoContainer,
                 mSurfaceView);
@@ -287,6 +297,10 @@ public class MainActivity extends DTVActivity {
                 sIpChannels = ipChannels;
                 return true;
             }
+            case R.id.menu_records: {
+                mRecordListDialog.show();
+                return true;
+            }
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -327,14 +341,17 @@ public class MainActivity extends DTVActivity {
         mSurfaceView.setZOrderOnTop(true);
     }
 
-    private void initializeChannelListDialog() {
+    private void initializeDialogs() {
         mChannelListDialog = new ChannelListDialog(this);
-        mChannelListDialog.setOnCancelListener(new OnCancelListener() {
+        OnCancelListener listener = new OnCancelListener() {
             @Override
             public void onCancel(DialogInterface dialog) {
                 refreshSurfaceView(mSurfaceView);
             }
-        });
+        };
+        mChannelListDialog.setOnCancelListener(listener);
+        mRecordListDialog = new RecordListDialog(this);
+        mRecordListDialog.setOnCancelListener(listener);
     }
 
     /**
