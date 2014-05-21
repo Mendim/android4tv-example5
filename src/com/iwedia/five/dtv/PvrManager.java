@@ -13,6 +13,8 @@ package com.iwedia.five.dtv;
 import com.iwedia.dtv.pvr.IPvrCallback;
 import com.iwedia.dtv.pvr.IPvrControl;
 import com.iwedia.dtv.pvr.MediaInfo;
+import com.iwedia.dtv.pvr.PvrSortMode;
+import com.iwedia.dtv.pvr.PvrSortOrder;
 import com.iwedia.dtv.pvr.TimeshiftInfo;
 import com.iwedia.dtv.types.InternalException;
 
@@ -220,6 +222,40 @@ public class PvrManager {
         mCurrentRecord = null;
         mPvrControl.stopPlayback(DVBManager.getInstance()
                 .getPlaybackRouteIDMain());
+    }
+
+    /**
+     * Sets desired sort mode.
+     * 
+     * @param order
+     *        New sort mode to set.
+     */
+    public void setSortMode(PvrSortMode mode) {
+        mPvrControl.setMediaListSortMode(mode);
+    }
+
+    /**
+     * Returns active sort mode.
+     */
+    public PvrSortMode getSortMode() {
+        return mPvrControl.getMediaListSortMode();
+    }
+
+    /**
+     * Sets desired sort order.
+     * 
+     * @param order
+     *        New sort order to set.
+     */
+    public void setSortOrder(PvrSortOrder order) {
+        mPvrControl.setMediaListSortOrder(order);
+    }
+
+    /**
+     * Returns active sort order.
+     */
+    public PvrSortOrder getSortOrder() {
+        return mPvrControl.getMediaListSortOrder();
     }
 
     public int getPvrSpeed() {

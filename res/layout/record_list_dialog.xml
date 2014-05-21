@@ -15,17 +15,55 @@
      limitations under the License.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#B000"
-    android:orientation="horizontal" >
-    <ListView
-        android:id="@+id/listViewRecords"
+    android:orientation="horizontal"
+    android:padding="20dp"
+    tools:context="com.iwedia.five.RecordListDialog" >
+    <RelativeLayout
+        android:id="@+id/dummyLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:choiceMode="singleChoice" >
-    </ListView>
+        android:layout_weight="1" >
+        <Button
+            android:id="@+id/buttonSortByName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:text="Sort by name" />
+        <Button
+            android:id="@+id/buttonSortByDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="10dp"
+            android:layout_toRightOf="@+id/buttonSortByName"
+            android:text="Sort by date" />
+        <Button
+            android:id="@+id/buttonSortByDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/buttonSortByName"
+            android:text="Sort by duration" />
+        <Button
+            android:id="@+id/buttonSortOrder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/buttonSortByName"
+            android:layout_toRightOf="@+id/buttonSortByDuration" />
+        <ListView
+            android:id="@+id/listViewRecords"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/buttonSortByDuration"
+            android:layout_marginTop="20dp"
+            android:choiceMode="singleChoice" >
+        </ListView>
+    </RelativeLayout>
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"

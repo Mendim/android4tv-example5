@@ -105,12 +105,17 @@ public class MainActivity extends DTVActivity {
         public void eventTimeshiftStart(PvrEventTimeshiftStart arg0) {
             Log.d(TAG, "eventTimeshiftStart");
             mDVBManager.getPvrManager().setTimeShftActive(true);
+            Message.obtain(mHandler, UiHandler.REFRESH_PLAYBACK_SPEED,
+                    PvrSpeedMode.converSpeedToString(mDVBManager
+                            .getPvrManager().getPvrSpeed()));
         }
 
         @Override
         public void eventTimeshiftSpeed(PvrEventTimeshiftSpeed arg0) {
             Log.d(TAG, "eventTimeshiftSpeed CHANGED " + arg0.getSpeed());
             mDVBManager.getPvrManager().setmPvrSpeedConst(arg0.getSpeed());
+            Message.obtain(mHandler, UiHandler.REFRESH_PLAYBACK_SPEED,
+                    PvrSpeedMode.converSpeedToString(arg0.getSpeed()));
         }
 
         @Override
@@ -168,6 +173,8 @@ public class MainActivity extends DTVActivity {
         public void eventRecordStart(PvrEventRecordStart arg0) {
             Log.d(TAG, "\n\n\nRECORD STARTED");
             mDVBManager.getPvrManager().setPvrActive(true);
+            Message.obtain(mHandler, UiHandler.REFRESH_PLAYBACK_SPEED,
+                    PvrSpeedMode.converSpeedToString(-1));
         }
 
         @Override
@@ -209,12 +216,17 @@ public class MainActivity extends DTVActivity {
             mDVBManager.getPvrManager().setPvrPlaybackActive(true);
             Message.obtain(mHandler, UiHandler.HIDE_RECORDS_DIALOG,
                     mRecordListDialog).sendToTarget();
+            Message.obtain(mHandler, UiHandler.REFRESH_PLAYBACK_SPEED,
+                    PvrSpeedMode.converSpeedToString(mDVBManager
+                            .getPvrManager().getPvrSpeed()));
         }
 
         @Override
         public void eventPlaybackSpeed(PvrEventPlaybackSpeed arg0) {
             Log.d(TAG, "\n\n\nRECORD EVENT PLAYBACK SPEED: " + arg0.getSpeed());
             mDVBManager.getPvrManager().setmPvrSpeedConst(arg0.getSpeed());
+            Message.obtain(mHandler, UiHandler.REFRESH_PLAYBACK_SPEED,
+                    PvrSpeedMode.converSpeedToString(arg0.getSpeed()));
         }
 
         @Override
@@ -298,6 +310,18 @@ public class MainActivity extends DTVActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        /** Refresh surface view */
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                refreshSurfaceView(mSurfaceView);
+            }
+        }, 700);
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         try {
@@ -362,6 +386,9 @@ public class MainActivity extends DTVActivity {
         videoView.start();
     }
 
+    /**
+     * Initialize surface view.
+     */
     private void initializeSurfaceView() {
         mSurfaceView = (SurfaceView) findViewById(R.id.surfaceView);
         mSurfaceView.getHolder().setFormat(PixelFormat.RGBA_8888);
@@ -369,6 +396,9 @@ public class MainActivity extends DTVActivity {
         mSurfaceView.setZOrderOnTop(true);
     }
 
+    /**
+     * Initialize dialogs with channel list and PVR recordings.
+     */
     private void initializeDialogs() {
         mChannelListDialog = new ChannelListDialog(this);
         mRecordListDialog = new RecordListDialog(this);
@@ -392,6 +422,9 @@ public class MainActivity extends DTVActivity {
         mChannelName = (TextView) findViewById(R.id.textview_channel_name);
     }
 
+    /**
+     * Initialize PVR information layout.
+     */
     private void initializePvrInfoContainer() {
         mPvrInfoContainer = findViewById(R.id.pvr_info_container);
     }
@@ -400,6 +433,7 @@ public class MainActivity extends DTVActivity {
      * Show Channel Name and Number of Current Channel on Channel Change.
      * 
      * @param channelInfo
+     *        Object for displaying.
      */
     private void showChannelInfo(ChannelInfo channelInfo) {
         if (channelInfo != null) {
@@ -413,6 +447,9 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * Shows PVR information layout.
+     */
     private void showPvrInfo() {
         mPvrInfoContainer.setVisibility(View.VISIBLE);
         mHandler.removeMessages(UiHandler.HIDE_PVR_INFO_MESSAGE);
@@ -427,14 +464,20 @@ public class MainActivity extends DTVActivity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         Log.d(TAG, "KEY PRESSED " + keyCode);
         if (mDVBManager.getPvrManager().isPvrActive() && !isPvrKey(keyCode)) {
+            Toast.makeText(this, "Not supported in PVR!", Toast.LENGTH_SHORT)
+                    .show();
             return true;
         }
         if (mDVBManager.getPvrManager().isTimeShftActive()
                 && !isTimeShiftKey(keyCode)) {
+            Toast.makeText(this, "Not supported in time shift!",
+                    Toast.LENGTH_SHORT).show();
             return true;
         }
         if (mDVBManager.getPvrManager().isPvrPlaybackActive()
                 && !isPvrPlaybackKey(keyCode)) {
+            Toast.makeText(this, "Not supported in PVR playback!",
+                    Toast.LENGTH_SHORT).show();
             return true;
         }
         switch (keyCode) {
@@ -524,6 +567,8 @@ public class MainActivity extends DTVActivity {
                 } else if (mDVBManager.getPvrManager().isPvrActive()) {
                     mDVBManager.getPvrManager().stopPvr();
                 }
+                ((TextView) mPvrInfoContainer
+                        .findViewById(R.id.textViewPlaybackSpeed)).setText("");
                 return true;
             }
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD: {
@@ -560,6 +605,12 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * Clear surface view with transparency.
+     * 
+     * @param surface
+     *        Surface view to refresh.
+     */
     private static void refreshSurfaceView(SurfaceView surface) {
         if (surface.getVisibility() == View.VISIBLE) {
             Canvas canvas = surface.getHolder().lockCanvas();
@@ -578,10 +629,12 @@ public class MainActivity extends DTVActivity {
         public static final int HIDE_CHANNEL_INFO_VIEW_MESSAGE = 0,
                 HIDE_PVR_INFO_MESSAGE = 1, REFRESH_TIMESHIFT_PLAYBACK = 2,
                 REFRESH_PVR_PLAYBACK = 3, SHOW_RECORDS_DIALOG = 4,
-                HIDE_RECORDS_DIALOG = 5, REFRESH_PVR_RECORD_PLAYBACK = 6;
+                HIDE_RECORDS_DIALOG = 5, REFRESH_PVR_RECORD_PLAYBACK = 6,
+                REFRESH_PLAYBACK_SPEED = 7;
         private View mChannelContainer, mPvrContainer;
         /** PVR info container views */
-        private TextView mPvrInfoPosition, mPvrInfoAvailablePosition;
+        private TextView mPvrInfoPosition, mPvrInfoAvailablePosition,
+                mPvrPlaybackSpeed;
         private ProgressBar mPvrProgressBar;
         private static final SimpleDateFormat sFormat = new SimpleDateFormat(
                 "HH:mm:ss");
@@ -598,6 +651,8 @@ public class MainActivity extends DTVActivity {
                     .findViewById(R.id.textViewAvailablePosition);
             mPvrProgressBar = (ProgressBar) mPvrContainer
                     .findViewById(R.id.progressBar);
+            mPvrPlaybackSpeed = (TextView) mPvrContainer
+                    .findViewById(R.id.textViewPlaybackSpeed);
             mPvrProgressBar.setMax(100);
         }
 
@@ -656,6 +711,10 @@ public class MainActivity extends DTVActivity {
                     mPvrProgressBar.setMax(numberOfSeconds);
                     break;
                 }
+                case REFRESH_PLAYBACK_SPEED: {
+                    mPvrPlaybackSpeed.setText((CharSequence) msg.obj);
+                    break;
+                }
                 case SHOW_RECORDS_DIALOG: {
                     Dialog dialog = (Dialog) msg.obj;
                     dialog.show();
@@ -670,6 +729,13 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * If key is for PVR record handling.
+     * 
+     * @param keyCode
+     *        to check.
+     * @return True if it is ok, false otherwise.
+     */
     private boolean isPvrKey(int keyCode) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_INFO:
@@ -681,6 +747,13 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * If key is for PVR playback handling.
+     * 
+     * @param keyCode
+     *        to check.
+     * @return True if it is ok, false otherwise.
+     */
     private boolean isPvrPlaybackKey(int keyCode) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_INFO:
@@ -695,6 +768,13 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * If key is for time shift handling.
+     * 
+     * @param keyCode
+     *        to check.
+     * @return True if it is ok, false otherwise.
+     */
     private boolean isTimeShiftKey(int keyCode) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_INFO:
@@ -709,6 +789,10 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * Class that contains information needed for displaying while time shift is
+     * active.
+     */
     private class PvrTimeShiftPositionHolder {
         private int mEndTime;
         private PvrEventTimeshiftPosition mPositionObject;
@@ -729,6 +813,10 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * Class that contains information needed for displaying while PVR playback
+     * is active.
+     */
     private class PvrPlaybackPositionHolder {
         private MediaInfo mPvrMediaInfo;
         private PvrEventPlaybackPosition mPositionObject;

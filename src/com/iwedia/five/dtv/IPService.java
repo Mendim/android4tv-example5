@@ -10,6 +10,9 @@
  */
 package com.iwedia.five.dtv;
 
+/**
+ * IP service holder.
+ */
 public class IPService {
     private String mName;
     private String mUrl;

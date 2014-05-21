@@ -93,5 +93,12 @@
             android:layout_marginRight="20dp"
             android:layout_toLeftOf="@+id/textViewAvailablePosition"
             android:layout_toRightOf="@+id/textViewPosition" />
+        <TextView
+            android:id="@+id/textViewPlaybackSpeed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/progressBar"
+            android:layout_centerHorizontal="true"
+            android:textSize="20sp" />
     </RelativeLayout>
 </RelativeLayout>
