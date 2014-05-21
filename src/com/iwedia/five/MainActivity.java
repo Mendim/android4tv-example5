@@ -92,6 +92,9 @@ public class MainActivity extends DTVActivity {
         @Override
         public void eventTimeshiftStop(PvrEventTimeshiftStop arg0) {
             Log.d(TAG, "eventTimeshiftStop");
+            mHandler.removeMessages(UiHandler.HIDE_PVR_INFO_MESSAGE);
+            mHandler.sendEmptyMessageDelayed(UiHandler.HIDE_PVR_INFO_MESSAGE,
+                    CHANNEL_VIEW_DURATION / 5);
             mDVBManager.getPvrManager().setTimeShftActive(false);
             try {
                 mDVBManager.changeChannelByNumber(DTVActivity
@@ -105,12 +108,20 @@ public class MainActivity extends DTVActivity {
         public void eventTimeshiftStart(PvrEventTimeshiftStart arg0) {
             Log.d(TAG, "eventTimeshiftStart");
             mDVBManager.getPvrManager().setTimeShftActive(true);
+            Message.obtain(
+                    mHandler,
+                    UiHandler.REFRESH_PLAYBACK_SPEED,
+                    PvrSpeedMode.converSpeedToString(mDVBManager
+                            .getPvrManager().getPvrSpeed())).sendToTarget();
         }
 
         @Override
         public void eventTimeshiftSpeed(PvrEventTimeshiftSpeed arg0) {
             Log.d(TAG, "eventTimeshiftSpeed CHANGED " + arg0.getSpeed());
             mDVBManager.getPvrManager().setmPvrSpeedConst(arg0.getSpeed());
+            Message.obtain(mHandler, UiHandler.REFRESH_PLAYBACK_SPEED,
+                    PvrSpeedMode.converSpeedToString(arg0.getSpeed()))
+                    .sendToTarget();
         }
 
         @Override
@@ -161,13 +172,32 @@ public class MainActivity extends DTVActivity {
         @Override
         public void eventRecordStop(PvrEventRecordStop arg0) {
             Log.d(TAG, "\n\n\nRECORD STOPPED");
+            mHandler.removeMessages(UiHandler.HIDE_PVR_INFO_MESSAGE);
+            mHandler.sendEmptyMessageDelayed(UiHandler.HIDE_PVR_INFO_MESSAGE,
+                    CHANNEL_VIEW_DURATION / 5);
+            MainActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this, "Record stopped",
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
             mDVBManager.getPvrManager().setPvrActive(false);
         }
 
         @Override
         public void eventRecordStart(PvrEventRecordStart arg0) {
             Log.d(TAG, "\n\n\nRECORD STARTED");
+            MainActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this, "Record started",
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
             mDVBManager.getPvrManager().setPvrActive(true);
+            Message.obtain(mHandler, UiHandler.REFRESH_PLAYBACK_SPEED,
+                    PvrSpeedMode.converSpeedToString(-1)).sendToTarget();
         }
 
         @Override
@@ -198,6 +228,9 @@ public class MainActivity extends DTVActivity {
         @Override
         public void eventPlaybackStop(PvrEventPlaybackStop arg0) {
             Log.d(TAG, "\n\n\nRECORD EVENT PLAYBACK STOPPED: ");
+            mHandler.removeMessages(UiHandler.HIDE_PVR_INFO_MESSAGE);
+            mHandler.sendEmptyMessageDelayed(UiHandler.HIDE_PVR_INFO_MESSAGE,
+                    CHANNEL_VIEW_DURATION / 5);
             mDVBManager.getPvrManager().setPvrPlaybackActive(false);
             Message.obtain(mHandler, UiHandler.SHOW_RECORDS_DIALOG,
                     mRecordListDialog).sendToTarget();
@@ -209,12 +242,20 @@ public class MainActivity extends DTVActivity {
             mDVBManager.getPvrManager().setPvrPlaybackActive(true);
             Message.obtain(mHandler, UiHandler.HIDE_RECORDS_DIALOG,
                     mRecordListDialog).sendToTarget();
+            Message.obtain(
+                    mHandler,
+                    UiHandler.REFRESH_PLAYBACK_SPEED,
+                    PvrSpeedMode.converSpeedToString(mDVBManager
+                            .getPvrManager().getPvrSpeed())).sendToTarget();
         }
 
         @Override
         public void eventPlaybackSpeed(PvrEventPlaybackSpeed arg0) {
             Log.d(TAG, "\n\n\nRECORD EVENT PLAYBACK SPEED: " + arg0.getSpeed());
             mDVBManager.getPvrManager().setmPvrSpeedConst(arg0.getSpeed());
+            Message.obtain(mHandler, UiHandler.REFRESH_PLAYBACK_SPEED,
+                    PvrSpeedMode.converSpeedToString(arg0.getSpeed()))
+                    .sendToTarget();
         }
 
         @Override
@@ -281,19 +322,19 @@ public class MainActivity extends DTVActivity {
         /** Initialize Handler. */
         mHandler = new UiHandler(mChannelContainer, mPvrInfoContainer,
                 mSurfaceView);
-        /** Start DTV. */
-        try {
-            mDVBManager.startDTV(getLastWatchedChannelIndex());
-        } catch (IllegalArgumentException e) {
-            Toast.makeText(
-                    this,
-                    "Cant play service with index: "
-                            + getLastWatchedChannelIndex(), Toast.LENGTH_SHORT)
-                    .show();
-        } catch (InternalException e) {
-            /** Error with service connection. */
-            finishActivity();
-        }
+        // /** Start DTV. */
+        // try {
+        // mDVBManager.startDTV(getLastWatchedChannelIndex());
+        // } catch (IllegalArgumentException e) {
+        // Toast.makeText(
+        // this,
+        // "Cant play service with index: "
+        // + getLastWatchedChannelIndex(), Toast.LENGTH_SHORT)
+        // .show();
+        // } catch (InternalException e) {
+        // /** Error with service connection. */
+        // finishActivity();
+        // }
         mDVBManager.getPvrManager().registerPvrCallback(mPvrCallback);
     }
 
@@ -440,9 +481,9 @@ public class MainActivity extends DTVActivity {
      */
     private void showPvrInfo() {
         mPvrInfoContainer.setVisibility(View.VISIBLE);
-        mHandler.removeMessages(UiHandler.HIDE_PVR_INFO_MESSAGE);
-        mHandler.sendEmptyMessageDelayed(UiHandler.HIDE_PVR_INFO_MESSAGE,
-                CHANNEL_VIEW_DURATION);
+        // mHandler.removeMessages(UiHandler.HIDE_PVR_INFO_MESSAGE);
+        // mHandler.sendEmptyMessageDelayed(UiHandler.HIDE_PVR_INFO_MESSAGE,
+        // CHANNEL_VIEW_DURATION);
     }
 
     /**
@@ -452,14 +493,20 @@ public class MainActivity extends DTVActivity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         Log.d(TAG, "KEY PRESSED " + keyCode);
         if (mDVBManager.getPvrManager().isPvrActive() && !isPvrKey(keyCode)) {
+            Toast.makeText(this, "Not supported in PVR!", Toast.LENGTH_SHORT)
+                    .show();
             return true;
         }
         if (mDVBManager.getPvrManager().isTimeShftActive()
                 && !isTimeShiftKey(keyCode)) {
+            Toast.makeText(this, "Not supported in time shift!",
+                    Toast.LENGTH_SHORT).show();
             return true;
         }
         if (mDVBManager.getPvrManager().isPvrPlaybackActive()
                 && !isPvrPlaybackKey(keyCode)) {
+            Toast.makeText(this, "Not supported in PVR playback!",
+                    Toast.LENGTH_SHORT).show();
             return true;
         }
         switch (keyCode) {
@@ -509,8 +556,10 @@ public class MainActivity extends DTVActivity {
                     showPvrInfo();
                     return true;
                 }
-                showChannelInfo(mDVBManager.getChannelInfo(mDVBManager
-                        .getCurrentChannelNumber()));
+                int currentChannel = mDVBManager.getCurrentChannelNumber();
+                if (currentChannel > 0) {
+                    showChannelInfo(mDVBManager.getChannelInfo(currentChannel));
+                }
                 return true;
             }
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: {
@@ -549,6 +598,8 @@ public class MainActivity extends DTVActivity {
                 } else if (mDVBManager.getPvrManager().isPvrActive()) {
                     mDVBManager.getPvrManager().stopPvr();
                 }
+                ((TextView) mPvrInfoContainer
+                        .findViewById(R.id.textViewPlaybackSpeed)).setText("");
                 return true;
             }
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD: {
@@ -609,10 +660,12 @@ public class MainActivity extends DTVActivity {
         public static final int HIDE_CHANNEL_INFO_VIEW_MESSAGE = 0,
                 HIDE_PVR_INFO_MESSAGE = 1, REFRESH_TIMESHIFT_PLAYBACK = 2,
                 REFRESH_PVR_PLAYBACK = 3, SHOW_RECORDS_DIALOG = 4,
-                HIDE_RECORDS_DIALOG = 5, REFRESH_PVR_RECORD_PLAYBACK = 6;
+                HIDE_RECORDS_DIALOG = 5, REFRESH_PVR_RECORD_PLAYBACK = 6,
+                REFRESH_PLAYBACK_SPEED = 7;
         private View mChannelContainer, mPvrContainer;
         /** PVR info container views */
-        private TextView mPvrInfoPosition, mPvrInfoAvailablePosition;
+        private TextView mPvrInfoPosition, mPvrInfoAvailablePosition,
+                mPvrPlaybackSpeed;
         private ProgressBar mPvrProgressBar;
         private static final SimpleDateFormat sFormat = new SimpleDateFormat(
                 "HH:mm:ss");
@@ -629,6 +682,8 @@ public class MainActivity extends DTVActivity {
                     .findViewById(R.id.textViewAvailablePosition);
             mPvrProgressBar = (ProgressBar) mPvrContainer
                     .findViewById(R.id.progressBar);
+            mPvrPlaybackSpeed = (TextView) mPvrContainer
+                    .findViewById(R.id.textViewPlaybackSpeed);
             mPvrProgressBar.setMax(100);
         }
 
@@ -685,6 +740,12 @@ public class MainActivity extends DTVActivity {
                     date = new Date(numberOfSeconds * 1000);
                     mPvrInfoAvailablePosition.setText(sFormat.format(date));
                     mPvrProgressBar.setMax(numberOfSeconds);
+                    break;
+                }
+                case REFRESH_PLAYBACK_SPEED: {
+                    String speed = (String) msg.obj;
+                    Log.d(TAG, "PLAYBACK SPEED: " + speed);
+                    mPvrPlaybackSpeed.setText(speed);
                     break;
                 }
                 case SHOW_RECORDS_DIALOG: {

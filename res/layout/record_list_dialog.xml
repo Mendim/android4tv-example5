@@ -27,39 +27,71 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1" >
-        <Button
-            android:id="@+id/buttonSortByName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
-            android:text="Sort by name" />
-        <Button
-            android:id="@+id/buttonSortByDate"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/dummyLayout1"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
-            android:layout_marginLeft="10dp"
-            android:layout_toRightOf="@+id/buttonSortByName"
-            android:text="Sort by date" />
-        <Button
-            android:id="@+id/buttonSortByDuration"
-            android:layout_width="wrap_content"
+            android:orientation="horizontal" >
+            <Button
+                android:id="@+id/buttonSortByNameAsc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Sort by name ascending" />
+            <Button
+                android:id="@+id/buttonSortByNameDesc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1"
+                android:text="Sort by name descending" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/dummyLayout2"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_below="@+id/buttonSortByName"
-            android:text="Sort by duration" />
-        <Button
-            android:id="@+id/buttonSortOrder"
-            android:layout_width="wrap_content"
+            android:layout_below="@+id/dummyLayout1"
+            android:orientation="horizontal" >
+            <Button
+                android:id="@+id/buttonSortByDurationAsc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Sort by duration ascending" />
+            <Button
+                android:id="@+id/buttonSortByDurationDesc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1"
+                android:text="Sort by duration descending" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/dummyLayout3"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/buttonSortByName"
-            android:layout_toRightOf="@+id/buttonSortByDuration" />
+            android:layout_below="@+id/dummyLayout2"
+            android:orientation="horizontal" >
+            <Button
+                android:id="@+id/buttonSortByDateAsc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Sort by date ascending" />
+            <Button
+                android:id="@+id/buttonSortByDateDesc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1"
+                android:text="Sort by date descending" />
+        </LinearLayout>
         <ListView
             android:id="@+id/listViewRecords"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/buttonSortByDuration"
+            android:layout_below="@+id/dummyLayout3"
             android:layout_marginTop="20dp"
             android:choiceMode="singleChoice" >
         </ListView>

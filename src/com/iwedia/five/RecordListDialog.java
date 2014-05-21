@@ -38,8 +38,6 @@ import java.util.Date;
  */
 public class RecordListDialog extends Dialog implements OnItemSelectedListener,
         OnItemClickListener, android.view.View.OnClickListener {
-    private static final String SORT_ASCENDING = "Ascending",
-            SORT_DESCENDING = "Descending";
     private TextView mTitle, mDescription, mStartTime, mDuration, mSize;
     private ListView mListViewRecords;
     private ArrayList<MediaInfo> mRecords;
@@ -67,14 +65,12 @@ public class RecordListDialog extends Dialog implements OnItemSelectedListener,
          */
         mListViewRecords.setOnItemSelectedListener(this);
         mListViewRecords.setOnItemClickListener(this);
-        Button sortOrder = (Button) findViewById(R.id.buttonSortOrder);
-        sortOrder.setText(DVBManager.getInstance().getPvrManager()
-                .getSortOrder() == PvrSortOrder.SORT_ASCENDING ? SORT_ASCENDING
-                : SORT_DESCENDING);
-        sortOrder.setOnClickListener(this);
-        findViewById(R.id.buttonSortByDate).setOnClickListener(this);
-        findViewById(R.id.buttonSortByDuration).setOnClickListener(this);
-        findViewById(R.id.buttonSortByName).setOnClickListener(this);
+        findViewById(R.id.buttonSortByDateAsc).setOnClickListener(this);
+        findViewById(R.id.buttonSortByDateDesc).setOnClickListener(this);
+        findViewById(R.id.buttonSortByDurationAsc).setOnClickListener(this);
+        findViewById(R.id.buttonSortByDurationDesc).setOnClickListener(this);
+        findViewById(R.id.buttonSortByNameAsc).setOnClickListener(this);
+        findViewById(R.id.buttonSortByNameDesc).setOnClickListener(this);
     }
 
     @Override
@@ -180,31 +176,46 @@ public class RecordListDialog extends Dialog implements OnItemSelectedListener,
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.buttonSortByDate: {
+            case R.id.buttonSortByDateAsc: {
                 DVBManager.getInstance().getPvrManager()
                         .setSortMode(PvrSortMode.SORT_BY_DATE);
+                DVBManager.getInstance().getPvrManager()
+                        .setSortOrder(PvrSortOrder.SORT_ASCENDING);
                 break;
             }
-            case R.id.buttonSortByDuration: {
+            case R.id.buttonSortByDateDesc: {
+                DVBManager.getInstance().getPvrManager()
+                        .setSortMode(PvrSortMode.SORT_BY_DATE);
+                DVBManager.getInstance().getPvrManager()
+                        .setSortOrder(PvrSortOrder.SORT_DESCENDING);
+                break;
+            }
+            case R.id.buttonSortByDurationAsc: {
                 DVBManager.getInstance().getPvrManager()
                         .setSortMode(PvrSortMode.SORT_BY_DURATION);
+                DVBManager.getInstance().getPvrManager()
+                        .setSortOrder(PvrSortOrder.SORT_ASCENDING);
                 break;
             }
-            case R.id.buttonSortByName: {
+            case R.id.buttonSortByDurationDesc: {
+                DVBManager.getInstance().getPvrManager()
+                        .setSortMode(PvrSortMode.SORT_BY_DURATION);
+                DVBManager.getInstance().getPvrManager()
+                        .setSortOrder(PvrSortOrder.SORT_DESCENDING);
+                break;
+            }
+            case R.id.buttonSortByNameAsc: {
                 DVBManager.getInstance().getPvrManager()
                         .setSortMode(PvrSortMode.SORT_BY_NAME);
+                DVBManager.getInstance().getPvrManager()
+                        .setSortOrder(PvrSortOrder.SORT_ASCENDING);
                 break;
             }
-            case R.id.buttonSortOrder: {
-                PvrSortOrder order = null;
-                if (((Button) v).getText().toString().equals(SORT_ASCENDING)) {
-                    order = PvrSortOrder.SORT_DESCENDING;
-                    ((Button) v).setText(SORT_DESCENDING);
-                } else {
-                    order = PvrSortOrder.SORT_ASCENDING;
-                    ((Button) v).setText(SORT_ASCENDING);
-                }
-                DVBManager.getInstance().getPvrManager().setSortOrder(order);
+            case R.id.buttonSortByNameDesc: {
+                DVBManager.getInstance().getPvrManager()
+                        .setSortMode(PvrSortMode.SORT_BY_NAME);
+                DVBManager.getInstance().getPvrManager()
+                        .setSortOrder(PvrSortOrder.SORT_DESCENDING);
                 break;
             }
             default:

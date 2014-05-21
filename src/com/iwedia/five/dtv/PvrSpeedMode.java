@@ -38,14 +38,57 @@ public class PvrSpeedMode {
             PvrSpeedMode.PVR_SPEED_FORWARD_X4,
             PvrSpeedMode.PVR_SPEED_FORWARD_X8,
             PvrSpeedMode.PVR_SPEED_FORWARD_X16,
-            PvrSpeedMode.PVR_SPEED_FORWARD_X32,
-            PvrSpeedMode.PVR_SPEED_FORWARD_X64 };
+            PvrSpeedMode.PVR_SPEED_FORWARD_X32 };
     public static final int SPEED_ARRAY_REWIND[] = {
-            PvrSpeedMode.PVR_SPEED_BACKWARD_X1,
             PvrSpeedMode.PVR_SPEED_BACKWARD_X2,
             PvrSpeedMode.PVR_SPEED_BACKWARD_X4,
             PvrSpeedMode.PVR_SPEED_BACKWARD_X8,
             PvrSpeedMode.PVR_SPEED_BACKWARD_X16,
-            PvrSpeedMode.PVR_SPEED_BACKWARD_X32,
-            PvrSpeedMode.PVR_SPEED_BACKWARD_X64 };
+            PvrSpeedMode.PVR_SPEED_BACKWARD_X32 };
+
+    /**
+     * Converts speed to text representation.
+     */
+    public static String converSpeedToString(int speed) {
+        switch (speed) {
+            case PVR_SPEED_FORWARD_X1: {
+                return "1x";
+            }
+            case PVR_SPEED_FORWARD_X2: {
+                return "2x";
+            }
+            case PVR_SPEED_FORWARD_X4: {
+                return "4x";
+            }
+            case PVR_SPEED_FORWARD_X8: {
+                return "8x";
+            }
+            case PVR_SPEED_FORWARD_X16: {
+                return "16x";
+            }
+            case PVR_SPEED_FORWARD_X32: {
+                return "32x";
+            }
+            case PVR_SPEED_PAUSE: {
+                return "0x";
+            }
+            case PVR_SPEED_BACKWARD_X2: {
+                return "-2x";
+            }
+            case PVR_SPEED_BACKWARD_X4: {
+                return "-4x";
+            }
+            case PVR_SPEED_BACKWARD_X8: {
+                return "-8x";
+            }
+            case PVR_SPEED_BACKWARD_X16: {
+                return "-16x";
+            }
+            case PVR_SPEED_BACKWARD_X32: {
+                return "-32x";
+            }
+            default:
+                return "";
+        }
+    }
 }
