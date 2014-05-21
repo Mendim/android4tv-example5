@@ -61,15 +61,27 @@ public abstract class DTVActivity extends Activity {
         initializeIpChannels();
     }
 
+    /**
+     * Returns object for storing application preferences.
+     */
     public static SharedPreferences getSharedPreferences() {
         return instance.getSharedPreferences(TAG, MODE_PRIVATE);
     }
 
+    /**
+     * Save last watched channel index to application preferences.
+     * 
+     * @param index
+     *        Index to save.
+     */
     public static void setLastWatchedChannelIndex(int index) {
         getSharedPreferences().edit().putInt(LAST_WATCHED_CHANNEL_INDEX, index)
                 .commit();
     }
 
+    /**
+     * Returns last watched channel index.
+     */
     public static int getLastWatchedChannelIndex() {
         return getSharedPreferences().getInt(LAST_WATCHED_CHANNEL_INDEX, 0);
     }
@@ -82,7 +94,7 @@ public abstract class DTVActivity extends Activity {
     }
 
     /**
-     * Initialize IP
+     * Initialize IP channels from assets.
      */
     private void initializeIpChannels() {
         copyFile(IP_CHANNELS);
@@ -149,6 +161,12 @@ public abstract class DTVActivity extends Activity {
         br = null;
     }
 
+    /**
+     * Load list of IP channels from external storage.
+     * 
+     * @param ipChannels
+     *        List to populate with IP channels.
+     */
     public void loadIPChannelsFromExternalStorage(
             ArrayList<IPService> ipChannels) {
         ArrayList<File> ipServiceListFiles = new ArrayList<File>();

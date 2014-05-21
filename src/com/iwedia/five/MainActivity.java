@@ -298,6 +298,18 @@ public class MainActivity extends DTVActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        /** Refresh surface view */
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                refreshSurfaceView(mSurfaceView);
+            }
+        }, 700);
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         try {
@@ -362,6 +374,9 @@ public class MainActivity extends DTVActivity {
         videoView.start();
     }
 
+    /**
+     * Initialize surface view.
+     */
     private void initializeSurfaceView() {
         mSurfaceView = (SurfaceView) findViewById(R.id.surfaceView);
         mSurfaceView.getHolder().setFormat(PixelFormat.RGBA_8888);
@@ -369,6 +384,9 @@ public class MainActivity extends DTVActivity {
         mSurfaceView.setZOrderOnTop(true);
     }
 
+    /**
+     * Initialize dialogs with channel list and PVR recordings.
+     */
     private void initializeDialogs() {
         mChannelListDialog = new ChannelListDialog(this);
         mRecordListDialog = new RecordListDialog(this);
@@ -392,6 +410,9 @@ public class MainActivity extends DTVActivity {
         mChannelName = (TextView) findViewById(R.id.textview_channel_name);
     }
 
+    /**
+     * Initialize PVR information layout.
+     */
     private void initializePvrInfoContainer() {
         mPvrInfoContainer = findViewById(R.id.pvr_info_container);
     }
@@ -400,6 +421,7 @@ public class MainActivity extends DTVActivity {
      * Show Channel Name and Number of Current Channel on Channel Change.
      * 
      * @param channelInfo
+     *        Object for displaying.
      */
     private void showChannelInfo(ChannelInfo channelInfo) {
         if (channelInfo != null) {
@@ -413,6 +435,9 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * Shows PVR information layout.
+     */
     private void showPvrInfo() {
         mPvrInfoContainer.setVisibility(View.VISIBLE);
         mHandler.removeMessages(UiHandler.HIDE_PVR_INFO_MESSAGE);
@@ -560,6 +585,12 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * Clear surface view with transparency.
+     * 
+     * @param surface
+     *        Surface view to refresh.
+     */
     private static void refreshSurfaceView(SurfaceView surface) {
         if (surface.getVisibility() == View.VISIBLE) {
             Canvas canvas = surface.getHolder().lockCanvas();
@@ -670,6 +701,13 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * If key is for PVR record handling.
+     * 
+     * @param keyCode
+     *        to check.
+     * @return True if it is ok, false otherwise.
+     */
     private boolean isPvrKey(int keyCode) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_INFO:
@@ -681,6 +719,13 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * If key is for PVR playback handling.
+     * 
+     * @param keyCode
+     *        to check.
+     * @return True if it is ok, false otherwise.
+     */
     private boolean isPvrPlaybackKey(int keyCode) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_INFO:
@@ -695,6 +740,13 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * If key is for time shift handling.
+     * 
+     * @param keyCode
+     *        to check.
+     * @return True if it is ok, false otherwise.
+     */
     private boolean isTimeShiftKey(int keyCode) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_INFO:
@@ -709,6 +761,10 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * Class that contains information needed for displaying while time shift is
+     * active.
+     */
     private class PvrTimeShiftPositionHolder {
         private int mEndTime;
         private PvrEventTimeshiftPosition mPositionObject;
@@ -729,6 +785,10 @@ public class MainActivity extends DTVActivity {
         }
     }
 
+    /**
+     * Class that contains information needed for displaying while PVR playback
+     * is active.
+     */
     private class PvrPlaybackPositionHolder {
         private MediaInfo mPvrMediaInfo;
         private PvrEventPlaybackPosition mPositionObject;

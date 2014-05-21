@@ -10,6 +10,9 @@
  */
 package com.iwedia.five.dtv;
 
+/**
+ * Class that holds required PVR playback speed constants.
+ */
 public class PvrSpeedMode {
     public static final int PVR_SPEED_BACKWARD_X64 = -6400;
     public static final int PVR_SPEED_BACKWARD_X32 = -3200;

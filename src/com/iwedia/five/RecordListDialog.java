@@ -16,13 +16,16 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import com.iwedia.dtv.pvr.MediaInfo;
+import com.iwedia.dtv.pvr.PvrSortMode;
+import com.iwedia.dtv.pvr.PvrSortOrder;
 import com.iwedia.dtv.types.InternalException;
 import com.iwedia.five.dtv.DVBManager;
 
@@ -30,8 +33,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+/**
+ * Dialog that contains list of PVR records.
+ */
 public class RecordListDialog extends Dialog implements OnItemSelectedListener,
-        OnItemClickListener {
+        OnItemClickListener, android.view.View.OnClickListener {
+    private static final String SORT_ASCENDING = "Ascending",
+            SORT_DESCENDING = "Descending";
     private TextView mTitle, mDescription, mStartTime, mDuration, mSize;
     private ListView mListViewRecords;
     private ArrayList<MediaInfo> mRecords;
@@ -45,14 +53,28 @@ public class RecordListDialog extends Dialog implements OnItemSelectedListener,
         super(context, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
         mContext = context;
         setContentView(R.layout.record_list_dialog);
+        /**
+         * Initialize views.
+         */
         mTitle = (TextView) findViewById(R.id.textViewMediaTitle);
         mDescription = (TextView) findViewById(R.id.textViewMediaDescription);
         mStartTime = (TextView) findViewById(R.id.textViewMediaStartTime);
         mDuration = (TextView) findViewById(R.id.textViewMediaDuration);
         mSize = (TextView) findViewById(R.id.textViewMediaSize);
         mListViewRecords = (ListView) findViewById(R.id.listViewRecords);
+        /**
+         * Set listeners
+         */
         mListViewRecords.setOnItemSelectedListener(this);
         mListViewRecords.setOnItemClickListener(this);
+        Button sortOrder = (Button) findViewById(R.id.buttonSortOrder);
+        sortOrder.setText(DVBManager.getInstance().getPvrManager()
+                .getSortOrder() == PvrSortOrder.SORT_ASCENDING ? SORT_ASCENDING
+                : SORT_DESCENDING);
+        sortOrder.setOnClickListener(this);
+        findViewById(R.id.buttonSortByDate).setOnClickListener(this);
+        findViewById(R.id.buttonSortByDuration).setOnClickListener(this);
+        findViewById(R.id.buttonSortByName).setOnClickListener(this);
     }
 
     @Override
@@ -136,6 +158,14 @@ public class RecordListDialog extends Dialog implements OnItemSelectedListener,
     public void onNothingSelected(AdapterView<?> arg0) {
     }
 
+    /**
+     * Convert mega bytes to human readable format.
+     * 
+     * @param mb
+     *        Number of mega bytes.
+     * @param si
+     * @return Human readable format
+     */
     public static String humanReadableByteCount(long mb, boolean si) {
         long bytes = mb * 1024 * 1024;
         int unit = si ? 1000 : 1024;
@@ -145,5 +175,41 @@ public class RecordListDialog extends Dialog implements OnItemSelectedListener,
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1)
                 + (si ? "" : "i");
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.buttonSortByDate: {
+                DVBManager.getInstance().getPvrManager()
+                        .setSortMode(PvrSortMode.SORT_BY_DATE);
+                break;
+            }
+            case R.id.buttonSortByDuration: {
+                DVBManager.getInstance().getPvrManager()
+                        .setSortMode(PvrSortMode.SORT_BY_DURATION);
+                break;
+            }
+            case R.id.buttonSortByName: {
+                DVBManager.getInstance().getPvrManager()
+                        .setSortMode(PvrSortMode.SORT_BY_NAME);
+                break;
+            }
+            case R.id.buttonSortOrder: {
+                PvrSortOrder order = null;
+                if (((Button) v).getText().toString().equals(SORT_ASCENDING)) {
+                    order = PvrSortOrder.SORT_DESCENDING;
+                    ((Button) v).setText(SORT_DESCENDING);
+                } else {
+                    order = PvrSortOrder.SORT_ASCENDING;
+                    ((Button) v).setText(SORT_ASCENDING);
+                }
+                DVBManager.getInstance().getPvrManager().setSortOrder(order);
+                break;
+            }
+            default:
+                break;
+        }
+        updateRecords();
     }
 }

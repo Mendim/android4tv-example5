@@ -23,14 +23,16 @@ import com.iwedia.five.adapters.ChannelListAdapter;
 import com.iwedia.five.dtv.DVBManager;
 
 /**
- * Channel List Activity.
+ * Dialog that contains list of channels.
  */
 public class ChannelListDialog extends Dialog implements OnItemClickListener {
     public static final String TAG = "ChannelListActivity";
     private GridView mChannelList;
+    private Context mContext;
 
     public ChannelListDialog(Context context) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
+        mContext = context;
         setContentView(R.layout.channel_list_activity);
         /** Initialize GridView. */
         initializeChannelList(context);
@@ -45,7 +47,12 @@ public class ChannelListDialog extends Dialog implements OnItemClickListener {
     private void initializeChannelList(Context context) {
         mChannelList = (GridView) findViewById(R.id.gridview_channellist);
         mChannelList.setOnItemClickListener(this);
-        mChannelList.setAdapter(new ChannelListAdapter(context, DVBManager
+    }
+
+    @Override
+    public void show() {
+        super.show();
+        mChannelList.setAdapter(new ChannelListAdapter(mContext, DVBManager
                 .getInstance().getChannelNames()));
         mChannelList.setSelection(DVBManager.getInstance()
                 .getCurrentChannelNumber());

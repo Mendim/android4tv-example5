@@ -217,10 +217,6 @@ public class DVBManager {
                 && (mLiveRouteCab != -1 || mLiveRouteSat != -1 || mLiveRouteTer != -1)) {
             ipAndSomeOtherTunerType = true;
         }
-        Log.d(TAG, "mLiveRouteTer=" + mLiveRouteTer + ", mLiveRouteCab="
-                + mLiveRouteCab + ", mLiveRouteIp=" + mLiveRouteIp);
-        Log.d(TAG, "mRecordRouteTer=" + mRecordRouteTer + ", mRecordRouteCab="
-                + mRecordRouteCab + ", mRecordRouteIp=" + mRecordRouteIp);
     }
 
     /**
@@ -407,9 +403,9 @@ public class DVBManager {
     /**
      * Return route by service type.
      * 
-     * @param serviceType
+     * @param sourceType
      *        Service type to check.
-     * @return Desired route, or 0 if service type is undefined.
+     * @return Desired route, or -1 if service type is undefined.
      */
     private int getActiveRouteByServiceType(SourceType sourceType) {
         switch (sourceType) {
@@ -430,6 +426,13 @@ public class DVBManager {
         }
     }
 
+    /**
+     * Return record route by service type
+     * 
+     * @param sourceType
+     *        Service type to check.
+     * @return Desired route, or -1 if service type is undefined.
+     */
     private int getActiveRecordRouteByServiceType(SourceType sourceType) {
         switch (sourceType) {
             case CAB: {
@@ -488,9 +491,7 @@ public class DVBManager {
             for (int i = 0; i < DTVActivity.sIpChannels.size(); i++) {
                 channelNames.add(DTVActivity.sIpChannels.get(i).getName());
             }
-            Log.d(TAG, "IP CHANNELS: " + DTVActivity.sIpChannels.toString());
         }
-        Log.d(TAG, "IP CHANNELS: " + DTVActivity.sIpChannels.toString());
         return channelNames;
     }
 
@@ -498,8 +499,6 @@ public class DVBManager {
      * Get Current Channel Number.
      */
     public int getCurrentChannelNumber() {
-        Log.d(TAG, "getCurrentChannelNumber, mCurrentChannelNumberIp="
-                + mCurrentChannelNumberIp);
         /** For IP */
         if (mCurrentLiveRoute == mLiveRouteIp) {
             return mCurrentChannelNumberIp;
