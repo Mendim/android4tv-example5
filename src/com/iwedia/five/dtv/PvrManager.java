@@ -10,15 +10,29 @@
  */
 package com.iwedia.five.dtv;
 
+import android.view.SurfaceView;
+
+import com.iwedia.dtv.audio.AudioTrack;
+import com.iwedia.dtv.audio.IAudioControl;
+import com.iwedia.dtv.display.IDisplayControl;
+import com.iwedia.dtv.display.SurfaceBundle;
+import com.iwedia.dtv.dtvmanager.IDTVManager;
 import com.iwedia.dtv.pvr.IPvrCallback;
 import com.iwedia.dtv.pvr.IPvrControl;
 import com.iwedia.dtv.pvr.MediaInfo;
 import com.iwedia.dtv.pvr.PvrSortMode;
 import com.iwedia.dtv.pvr.PvrSortOrder;
 import com.iwedia.dtv.pvr.TimeshiftInfo;
+import com.iwedia.dtv.subtitle.ISubtitleControl;
+import com.iwedia.dtv.subtitle.SubtitleMode;
+import com.iwedia.dtv.subtitle.SubtitleTrack;
+import com.iwedia.dtv.teletext.ITeletextControl;
+import com.iwedia.dtv.teletext.TeletextTrack;
 import com.iwedia.dtv.types.InternalException;
+import com.iwedia.dtv.types.UserControl;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * Class for PVR related functions.
@@ -31,17 +45,76 @@ public class PvrManager {
     private boolean timeShftActive = false, pvrActive = false,
             pvrPlaybackActive = false;
     private MediaInfo mCurrentRecord = null;
+    private ITeletextControl mTeletextControl;
+    private ISubtitleControl mSubtitleControl;
+    private IAudioControl mAudioControl;
+    private IDisplayControl mDisplayControl;
+    private SurfaceView mSurfaceView = null;
+    private boolean subtitleActive = false, teletextActive = false;
     private static PvrManager instance = null;
 
-    protected static PvrManager getInstance(IPvrControl pvrControl) {
+    protected static PvrManager getInstance(IDTVManager mDTVManager) {
         if (instance == null) {
-            instance = new PvrManager(pvrControl);
+            instance = new PvrManager(mDTVManager);
         }
         return instance;
     }
 
-    private PvrManager(IPvrControl pvrControl) {
-        mPvrControl = pvrControl;
+    private PvrManager(IDTVManager mDTVManager) {
+        mPvrControl = mDTVManager.getPvrControl();
+        mDisplayControl = mDTVManager.getDisplayControl();
+        mTeletextControl = mDTVManager.getTeletextControl();
+        mSubtitleControl = mDTVManager.getSubtitleControl();
+        mAudioControl = mDTVManager.getAudioControl();
+    }
+
+    /**
+     * Initialize teletext and subtitle drawing surface.
+     * 
+     * @param surfaceView
+     *        to send to teletext and subtitle engine.
+     * @param screenWidth
+     *        Width of screen.
+     * @param screenHeight
+     *        Height of screen.
+     * @throws IllegalArgumentException
+     * @throws InternalException
+     */
+    public void initializeSubtitleAndTeletextDisplay(SurfaceView surfaceView)
+            throws InternalException {
+        mSurfaceView = surfaceView;
+        SurfaceBundle surfaceBundle = new SurfaceBundle();
+        surfaceBundle.setSurface(surfaceView.getHolder().getSurface());
+        mDisplayControl.setVideoLayerSurface(1, surfaceBundle);
+    }
+
+    /**
+     * Shows teletext dialog and send command to middleware to start drawing
+     * 
+     * @throws InternalException
+     */
+    public boolean showTeletext(int trackIndex) throws InternalException {
+        mTeletextControl.setCurrentTeletextTrack(DVBManager.getInstance()
+                .getCurrentLiveRoute(), trackIndex);
+        if (mTeletextControl.getCurrentTeletextTrackIndex(DVBManager
+                .getInstance().getCurrentLiveRoute()) >= 0) {
+            teletextActive = true;
+        }
+        return teletextActive;
+    }
+
+    /**
+     * Hide teletext
+     * 
+     * @throws InternalException
+     */
+    public void hideTeletext() throws InternalException {
+        mTeletextControl.deselectCurrentTeletextTrack(DVBManager.getInstance()
+                .getCurrentLiveRoute());
+        if (mTeletextControl.getCurrentTeletextTrackIndex(DVBManager
+                .getInstance().getCurrentLiveRoute()) < 0) {
+            teletextActive = false;
+        }
     }
 
     /**
@@ -220,6 +293,14 @@ public class PvrManager {
         resetSpeedIndexes();
         mPvrSpeed = PvrSpeedMode.PVR_SPEED_PAUSE;
         mCurrentRecord = null;
+        /**
+         * Hide teletext and subtitles if it is opened
+         */
+        if (isTeletextActive()) {
+            hideTeletext();
+        } else if (isSubtitleActive()) {
+            hideSubtitles();
+        }
         mPvrControl.stopPlayback(DVBManager.getInstance()
                 .getPlaybackRouteIDMain());
     }
@@ -256,6 +337,264 @@ public class PvrManager {
      */
     public PvrSortOrder getSortOrder() {
         return mPvrControl.getMediaListSortOrder();
+    }
+
+    /**
+     * Returns teletext track by index.
+     */
+    public TeletextTrack getTeletextTrack(int index) {
+        return mTeletextControl.getTeletextTrack(DVBManager.getInstance()
+                .getCurrentLiveRoute(), index);
+    }
+
+    /**
+     * Send pressed keycode to teletext engine.
+     */
+    public void sendTeletextInputCommand(int keyCode) {
+        mTeletextControl.sendInputControl(DVBManager.getInstance()
+                .getCurrentLiveRoute(), UserControl.PRESSED, keyCode);
+    }
+
+    /**
+     * Get teletext track count.
+     * 
+     * @return Number of teletext tracks.
+     */
+    public int getTeletextTrackCount() {
+        return mTeletextControl.getTeletextTrackCount(DVBManager.getInstance()
+                .getCurrentLiveRoute());
+    }
+
+    /**
+     * Convert teletext track type to human readable format.
+     * 
+     * @param type
+     *        Teletext track type.
+     * @return Converted string.
+     */
+    public String convertTeletextTrackTypeToHumanReadableFormat(int type) {
+        switch (type) {
+            case 1: {
+                return "TTXT NORMAL";
+            }
+            case 2: {
+                return "TTXT SUB";
+            }
+            case 3: {
+                return "TTXT INFO";
+            }
+            case 4: {
+                return "TTXT PROGRAM SCHEDULE";
+            }
+            case 5: {
+                return "TTXT SUB HOH";
+            }
+            default:
+                return "UNKNOWN";
+        }
+    }
+
+    /**
+     * Convert subtitle track mode to human readable format.
+     * 
+     * @param type
+     *        Subtitle track mode.
+     * @return Converted string.
+     */
+    public String convertSubtitleTrackModeToHumanReadableFormat(int modeIndex) {
+        SubtitleMode mode = SubtitleMode.getFromValue(modeIndex);
+        if (mode == SubtitleMode.TRANSLATION) {
+            return "NORMAL";
+        } else if (mode == SubtitleMode.HEARING_IMPAIRED) {
+            return "HOH";
+        }
+        return "";
+    }
+
+    /**
+     * Show subtitles on screen.
+     * 
+     * @param trackIndex
+     *        Subtitle track to show.
+     * @return True if subtitle is started, false otherwise.
+     * @throws InternalException
+     */
+    public boolean showSubtitles(int trackIndex) throws InternalException {
+        mSubtitleControl.setCurrentSubtitleTrack(DVBManager.getInstance()
+                .getCurrentLiveRoute(), trackIndex);
+        if (mSubtitleControl.getCurrentSubtitleTrackIndex(DVBManager
+                .getInstance().getCurrentLiveRoute()) >= 0) {
+            subtitleActive = true;
+        }
+        return subtitleActive;
+    }
+
+    /**
+     * Hide started subtitle.
+     * 
+     * @throws InternalException
+     */
+    public void hideSubtitles() throws InternalException {
+        mSubtitleControl.deselectCurrentSubtitleTrack(DVBManager.getInstance()
+                .getCurrentLiveRoute());
+        if (mSubtitleControl.getCurrentSubtitleTrackIndex(DVBManager
+                .getInstance().getCurrentLiveRoute()) < 0) {
+            subtitleActive = false;
+        }
+    }
+
+    /**
+     * Returns subtitle track by index.
+     */
+    public SubtitleTrack getSubtitleTrack(int index) {
+        return mSubtitleControl.getSubtitleTrack(DVBManager.getInstance()
+                .getCurrentLiveRoute(), index);
+    }
+
+    /**
+     * Get subtitle track count.
+     * 
+     * @return Number of subtitle tracks.
+     */
+    public int getSubtitlesTrackCount() {
+        return mSubtitleControl.getSubtitleTrackCount(DVBManager.getInstance()
+                .getCurrentLiveRoute());
+    }
+
+    /**
+     * Returns number of audio tracks for current channel.
+     */
+    public int getAudioLanguagesTrackCount() {
+        return mAudioControl.getAudioTrackCount(DVBManager.getInstance()
+                .getCurrentLiveRoute());
+    }
+
+    /**
+     * Returns audio track by index.
+     */
+    public AudioTrack getAudioLanguage(int index) {
+        return mAudioControl.getAudioTrack(DVBManager.getInstance()
+                .getCurrentLiveRoute(), index);
+    }
+
+    /**
+     * Sets audio track with desired index as active.
+     */
+    public void setAudioTrack(int index) throws InternalException {
+        mAudioControl.setCurrentAudioTrack(DVBManager.getInstance()
+                .getCurrentLiveRoute(), index);
+    }
+
+    /**
+     * Returns TRUE if subtitle is active, FALSE otherwise.
+     */
+    public boolean isSubtitleActive() {
+        if (mSubtitleControl.getCurrentSubtitleTrackIndex(DVBManager
+                .getInstance().getCurrentLiveRoute()) < 0) {
+            subtitleActive = false;
+        } else {
+            subtitleActive = true;
+        }
+        return subtitleActive;
+    }
+
+    /**
+     * Returns TRUE if teletext is active, FALSE otherwise.
+     */
+    public boolean isTeletextActive() {
+        if (mTeletextControl.getCurrentTeletextTrackIndex(DVBManager
+                .getInstance().getCurrentLiveRoute()) < 0) {
+            teletextActive = false;
+        } else {
+            teletextActive = true;
+        }
+        return teletextActive;
+    }
+
+    /**
+     * @return Avalable audio languages for current service. If they are not
+     *         available, it returns null.
+     */
+    public static String convertTrigramsToLanguage(String language) {
+        String languageToDisplay;
+        languageToDisplay = checkTrigrams(language);
+        if (languageToDisplay.contains(" ")) {
+            int indexOfSecondWord = languageToDisplay.indexOf(" ") + 1;
+            languageToDisplay = languageToDisplay.substring(0, 1).toUpperCase(
+                    new Locale(languageToDisplay))
+                    + languageToDisplay.substring(1, indexOfSecondWord)
+                    + languageToDisplay.substring(indexOfSecondWord,
+                            indexOfSecondWord + 1).toUpperCase()
+                    + languageToDisplay.substring(indexOfSecondWord + 1);
+        } else {
+            languageToDisplay = languageToDisplay.substring(0, 1).toUpperCase()
+                    + languageToDisplay.substring(1);
+        }
+        return languageToDisplay;
+    }
+
+    /**
+     * We must fix comedia and Android OS trigrams mismatch
+     */
+    private static String checkTrigrams(String language) {
+        if (language.equals("fre")) {
+            language = "fra";
+        } else if (language.equals("sve")) {
+            language = "swe";
+        } else if (language.equals("dut") || language.equals("nla")) {
+            language = "nl";
+        } else if (language.equals("ger")) {
+            language = "deu";
+        } else if (language.equals("alb")) {
+            language = "sqi";
+        } else if (language.equals("arm")) {
+            language = "hye";
+        } else if (language.equals("baq")) {
+            language = "eus";
+        } else if (language.equals("chi")) {
+            language = "zho";
+        } else if (language.equals("cze")) {
+            language = "ces";
+        } else if (language.equals("per")) {
+            language = "fas";
+        } else if (language.equals("gae")) {
+            language = "gla";
+        } else if (language.equals("geo")) {
+            language = "kat";
+        } else if (language.equals("gre")) {
+            language = "ell";
+        } else if (language.equals("ice")) {
+            language = "isl";
+        } else if (language.equals("ice")) {
+            language = "isl";
+        } else if (language.equals("mac") || language.equals("mak")) {
+            language = "mk";
+        } else if (language.equals("may")) {
+            language = "msa";
+        } else if (language.equals("rum")) {
+            language = "ron";
+        } else if (language.equals("scr")) {
+            language = "sr";
+        } else if (language.equals("slo")) {
+            language = "slk";
+        } else if (language.equals("esl") || language.equals("esp")) {
+            language = "spa";
+        } else if (language.equals("wel")) {
+            language = "cym";
+        }
+        Locale locale = new Locale(language);
+        Locale.setDefault(locale);
+        String languageToDisplay = Locale.getDefault().getDisplayLanguage();
+        if (languageToDisplay.equals("qaa")) {
+            languageToDisplay = "Original";
+        }
+        if (languageToDisplay.equals("mul")) {
+            languageToDisplay = "Multiple";
+        }
+        if (languageToDisplay.equals("und")) {
+            languageToDisplay = "Undefined";
+        }
+        return languageToDisplay;
     }
 
     public int getPvrSpeed() {

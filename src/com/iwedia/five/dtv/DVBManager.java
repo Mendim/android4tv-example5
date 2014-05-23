@@ -78,7 +78,7 @@ public class DVBManager {
      */
     private void initializeDTVService() {
         initializeRouteId();
-        mPvrManager = PvrManager.getInstance(mDTVManager.getPvrControl());
+        mPvrManager = PvrManager.getInstance(mDTVManager);
     }
 
     /**

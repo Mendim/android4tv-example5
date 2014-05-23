@@ -10,10 +10,12 @@
  */
 package com.iwedia.five;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
+import android.content.DialogInterface.OnClickListener;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
@@ -31,12 +33,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.iwedia.dtv.audio.AudioTrack;
 import com.iwedia.dtv.pvr.IPvrCallback;
 import com.iwedia.dtv.pvr.MediaInfo;
 import com.iwedia.dtv.pvr.PvrEventMediaAdd;
@@ -58,9 +62,12 @@ import com.iwedia.dtv.pvr.PvrEventTimeshiftPosition;
 import com.iwedia.dtv.pvr.PvrEventTimeshiftSpeed;
 import com.iwedia.dtv.pvr.PvrEventTimeshiftStart;
 import com.iwedia.dtv.pvr.PvrEventTimeshiftStop;
+import com.iwedia.dtv.subtitle.SubtitleTrack;
+import com.iwedia.dtv.teletext.TeletextTrack;
 import com.iwedia.dtv.types.InternalException;
 import com.iwedia.five.dtv.ChannelInfo;
 import com.iwedia.five.dtv.IPService;
+import com.iwedia.five.dtv.PvrManager;
 import com.iwedia.five.dtv.PvrSpeedMode;
 
 import java.text.SimpleDateFormat;
@@ -345,6 +352,12 @@ public class MainActivity extends DTVActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
+                try {
+                    mDVBManager.getPvrManager()
+                            .initializeSubtitleAndTeletextDisplay(mSurfaceView);
+                } catch (InternalException e) {
+                    e.printStackTrace();
+                }
                 refreshSurfaceView(mSurfaceView);
             }
         }, 700);
@@ -515,6 +528,220 @@ public class MainActivity extends DTVActivity {
                 mChannelListDialog.show();
                 return true;
             }
+            case KeyEvent.KEYCODE_0:
+            case KeyEvent.KEYCODE_1:
+            case KeyEvent.KEYCODE_2:
+            case KeyEvent.KEYCODE_3:
+            case KeyEvent.KEYCODE_4:
+            case KeyEvent.KEYCODE_5:
+            case KeyEvent.KEYCODE_6:
+            case KeyEvent.KEYCODE_7:
+            case KeyEvent.KEYCODE_8:
+            case KeyEvent.KEYCODE_9:
+            case KeyEvent.KEYCODE_PROG_RED:
+            case KeyEvent.KEYCODE_PROG_GREEN:
+            case KeyEvent.KEYCODE_PROG_BLUE:
+            case KeyEvent.KEYCODE_PROG_YELLOW: {
+                if (mDVBManager.getPvrManager().isTeletextActive()) {
+                    mDVBManager.getPvrManager().sendTeletextInputCommand(
+                            keyCode);
+                    return true;
+                }
+                break;
+            }
+            /** TELETEXT KEY */
+            case KeyEvent.KEYCODE_T:
+            case KeyEvent.KEYCODE_F5: {
+                if (mDVBManager.getPvrManager().isPvrPlaybackActive()) {
+                    /** TTX is already active */
+                    if (mDVBManager.getPvrManager().isTeletextActive()) {
+                        try {
+                            mDVBManager.getPvrManager().hideTeletext();
+                        } catch (InternalException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    /** Show TTX */
+                    else {
+                        /** Hide subtitles if they are active */
+                        if (mDVBManager.getPvrManager().isSubtitleActive()) {
+                            try {
+                                mDVBManager.getPvrManager().hideSubtitles();
+                            } catch (InternalException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        int trackCount = mDVBManager.getPvrManager()
+                                .getTeletextTrackCount();
+                        if (trackCount > 0) {
+                            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+                                    this, android.R.layout.simple_list_item_1);
+                            for (int i = 0; i < trackCount; i++) {
+                                TeletextTrack track = mDVBManager
+                                        .getPvrManager().getTeletextTrack(i);
+                                String type = mDVBManager
+                                        .getPvrManager()
+                                        .convertTeletextTrackTypeToHumanReadableFormat(
+                                                track.getType());
+                                arrayAdapter.add(PvrManager
+                                        .convertTrigramsToLanguage(track
+                                                .getName())
+                                        + " [" + type + "]");
+                            }
+                            createListDIalog("Select teletext track",
+                                    arrayAdapter, new OnClickListener() {
+                                        @Override
+                                        public void onClick(
+                                                DialogInterface dialog,
+                                                int which) {
+                                            try {
+                                                if (mDVBManager.getPvrManager()
+                                                        .isPvrPlaybackActive()) {
+                                                    if (mDVBManager
+                                                            .getPvrManager()
+                                                            .showTeletext(which)) {
+                                                        Toast.makeText(
+                                                                MainActivity.this,
+                                                                "Teletext started",
+                                                                Toast.LENGTH_SHORT)
+                                                                .show();
+                                                    } else {
+                                                        Toast.makeText(
+                                                                MainActivity.this,
+                                                                "Teletext is not available",
+                                                                Toast.LENGTH_SHORT)
+                                                                .show();
+                                                    }
+                                                }
+                                            } catch (InternalException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    });
+                        } else {
+                            Toast.makeText(this, "No teletext available!",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+                return true;
+            }
+            /** SUBTITLES KEY. */
+            case KeyEvent.KEYCODE_S:
+            case KeyEvent.KEYCODE_CAPTIONS: {
+                if (mDVBManager.getPvrManager().isPvrPlaybackActive()) {
+                    /** Hide subtitles. */
+                    if (mDVBManager.getPvrManager().isSubtitleActive()) {
+                        try {
+                            mDVBManager.getPvrManager().hideSubtitles();
+                            Toast.makeText(this, "Subtitle stopped",
+                                    Toast.LENGTH_SHORT).show();
+                        } catch (InternalException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    /** Show subtitles. */
+                    else {
+                        int trackCount = mDVBManager.getPvrManager()
+                                .getSubtitlesTrackCount();
+                        if (trackCount > 0) {
+                            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+                                    this, android.R.layout.simple_list_item_1);
+                            for (int i = 0; i < trackCount; i++) {
+                                SubtitleTrack track = mDVBManager
+                                        .getPvrManager().getSubtitleTrack(i);
+                                arrayAdapter
+                                        .add(PvrManager
+                                                .convertTrigramsToLanguage(track
+                                                        .getName())
+                                                + " ["
+                                                + mDVBManager
+                                                        .getPvrManager()
+                                                        .convertSubtitleTrackModeToHumanReadableFormat(
+                                                                track.getType())
+                                                + "]");
+                            }
+                            createListDIalog("Select subtitle track",
+                                    arrayAdapter, new OnClickListener() {
+                                        @Override
+                                        public void onClick(
+                                                DialogInterface dialog,
+                                                int which) {
+                                            try {
+                                                if (mDVBManager.getPvrManager()
+                                                        .isPvrPlaybackActive()) {
+                                                    if (mDVBManager
+                                                            .getPvrManager()
+                                                            .showSubtitles(
+                                                                    which)) {
+                                                        Toast.makeText(
+                                                                MainActivity.this,
+                                                                "Subtitle started",
+                                                                Toast.LENGTH_SHORT)
+                                                                .show();
+                                                    } else {
+                                                        Toast.makeText(
+                                                                MainActivity.this,
+                                                                "Subtitle is not available",
+                                                                Toast.LENGTH_SHORT)
+                                                                .show();
+                                                    }
+                                                }
+                                            } catch (InternalException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    });
+                        } else {
+                            Toast.makeText(this, "Subtitle is not available",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+                return true;
+            }
+            /**
+             * AUDIO LANGUAGES
+             */
+            case KeyEvent.KEYCODE_A:
+            case KeyEvent.KEYCODE_F6: {
+                if (mDVBManager.getPvrManager().isPvrPlaybackActive()) {
+                    int trackCount = mDVBManager.getPvrManager()
+                            .getAudioLanguagesTrackCount();
+                    if (trackCount > 0) {
+                        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+                                this, android.R.layout.simple_list_item_1);
+                        for (int i = 0; i < trackCount; i++) {
+                            AudioTrack track = mDVBManager.getPvrManager()
+                                    .getAudioLanguage(i);
+                            arrayAdapter.add(track.getName() + " "
+                                    + track.getLanguage() + "   ["
+                                    + track.getAudioDigitalType() + "]["
+                                    + track.getAudioChannleCfg() + "]");
+                        }
+                        createListDIalog("Select audio track", arrayAdapter,
+                                new OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog,
+                                            int which) {
+                                        try {
+                                            if (mDVBManager.getPvrManager()
+                                                    .isPvrPlaybackActive()) {
+                                                mDVBManager.getPvrManager()
+                                                        .setAudioTrack(which);
+                                            }
+                                        } catch (InternalException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                });
+                    } else {
+                        Toast.makeText(this, "Audio tracks are not available",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+                return true;
+            }
             /**
              * Change Channel Up (Using of KEYCODE_F4 is just workaround because
              * KeyEvent.KEYCODE_CHANNEL_UP is not mapped on remote control).
@@ -634,6 +861,7 @@ public class MainActivity extends DTVActivity {
                 return super.onKeyDown(keyCode, event);
             }
         }
+        return super.onKeyDown(keyCode, event);
     }
 
     /**
@@ -793,7 +1021,30 @@ public class MainActivity extends DTVActivity {
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
             case KeyEvent.KEYCODE_MEDIA_REWIND:
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-            case KeyEvent.KEYCODE_MEDIA_STOP: {
+            case KeyEvent.KEYCODE_MEDIA_STOP:
+                /** Teletext keys */
+            case KeyEvent.KEYCODE_0:
+            case KeyEvent.KEYCODE_1:
+            case KeyEvent.KEYCODE_2:
+            case KeyEvent.KEYCODE_3:
+            case KeyEvent.KEYCODE_4:
+            case KeyEvent.KEYCODE_5:
+            case KeyEvent.KEYCODE_6:
+            case KeyEvent.KEYCODE_7:
+            case KeyEvent.KEYCODE_8:
+            case KeyEvent.KEYCODE_9:
+            case KeyEvent.KEYCODE_PROG_RED:
+            case KeyEvent.KEYCODE_PROG_GREEN:
+            case KeyEvent.KEYCODE_PROG_BLUE:
+            case KeyEvent.KEYCODE_PROG_YELLOW:
+            case KeyEvent.KEYCODE_F5:
+            case KeyEvent.KEYCODE_T:
+                /** Audio languages key */
+            case KeyEvent.KEYCODE_A:
+            case KeyEvent.KEYCODE_F6:
+                /** Subtitle languages key */
+            case KeyEvent.KEYCODE_S:
+            case KeyEvent.KEYCODE_CAPTIONS: {
                 return true;
             }
             default:
@@ -820,6 +1071,29 @@ public class MainActivity extends DTVActivity {
             default:
                 return false;
         }
+    }
+
+    /**
+     * Create alert dialog with entries
+     * 
+     * @param title
+     * @param arrayAdapter
+     * @param listClickListener
+     */
+    private void createListDIalog(String title,
+            final ArrayAdapter<String> arrayAdapter,
+            DialogInterface.OnClickListener listClickListener) {
+        AlertDialog.Builder builderSingle = new AlertDialog.Builder(this);
+        builderSingle.setTitle(title);
+        builderSingle.setNegativeButton("Cancel",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        builderSingle.setAdapter(arrayAdapter, listClickListener);
+        builderSingle.show();
     }
 
     /**
