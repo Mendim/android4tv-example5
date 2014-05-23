@@ -522,6 +522,14 @@ public class MainActivity extends DTVActivity {
                     Toast.LENGTH_SHORT).show();
             return true;
         }
+        /**
+         * Disable non Teletext keys
+         */
+        if (mDVBManager.getPvrManager().isPvrPlaybackActive()
+                && mDVBManager.getPvrManager().isTeletextActive()
+                && !isTeletextKey(keyCode)) {
+            return true;
+        }
         switch (keyCode) {
         /** Open Channel List. */
             case KeyEvent.KEYCODE_DPAD_CENTER: {
@@ -1000,6 +1008,42 @@ public class MainActivity extends DTVActivity {
     private boolean isPvrKey(int keyCode) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_INFO:
+            case KeyEvent.KEYCODE_MEDIA_STOP: {
+                return true;
+            }
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * If key is for Teletext engine handling.
+     * 
+     * @param keyCode
+     *        to check.
+     * @return True if it is ok, false otherwise.
+     */
+    private boolean isTeletextKey(int keyCode) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_0:
+            case KeyEvent.KEYCODE_1:
+            case KeyEvent.KEYCODE_2:
+            case KeyEvent.KEYCODE_3:
+            case KeyEvent.KEYCODE_4:
+            case KeyEvent.KEYCODE_5:
+            case KeyEvent.KEYCODE_6:
+            case KeyEvent.KEYCODE_7:
+            case KeyEvent.KEYCODE_8:
+            case KeyEvent.KEYCODE_9:
+            case KeyEvent.KEYCODE_PROG_RED:
+            case KeyEvent.KEYCODE_PROG_GREEN:
+            case KeyEvent.KEYCODE_PROG_BLUE:
+            case KeyEvent.KEYCODE_PROG_YELLOW:
+            case KeyEvent.KEYCODE_F5:
+            case KeyEvent.KEYCODE_T:
+            case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+            case KeyEvent.KEYCODE_MEDIA_REWIND:
+            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
             case KeyEvent.KEYCODE_MEDIA_STOP: {
                 return true;
             }
