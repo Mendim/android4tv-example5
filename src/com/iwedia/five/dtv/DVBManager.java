@@ -264,7 +264,8 @@ public class DVBManager {
                 route = getActiveRouteByServiceType(desiredService
                         .getSourceType());
                 int numberOfDtvChannels = getChannelListSize()
-                        - DTVActivity.sIpChannels.size();
+                        - (mLiveRouteIp == -1 ? 0 : DTVActivity.sIpChannels
+                                .size());
                 /** Regular DVB channel */
                 if (channelNumber < numberOfDtvChannels) {
                     mCurrentLiveRoute = route;
@@ -360,7 +361,7 @@ public class DVBManager {
         channelNumber = (channelNumber + getChannelListSize())
                 % getChannelListSize();
         int numberOfDtvChannels = getChannelListSize()
-                - DTVActivity.sIpChannels.size();
+                - (mLiveRouteIp == -1 ? 0 : DTVActivity.sIpChannels.size());
         /** For regular DVB channel */
         if (channelNumber < numberOfDtvChannels) {
             ServiceDescriptor desiredService = mDTVManager.getServiceControl()
@@ -476,7 +477,7 @@ public class DVBManager {
         ArrayList<String> channelNames = new ArrayList<String>();
         String channelName = "";
         int channelListSize = getChannelListSize()
-                - DTVActivity.sIpChannels.size();
+                - (mLiveRouteIp == -1 ? 0 : DTVActivity.sIpChannels.size());
         IServiceControl serviceControl = mDTVManager.getServiceControl();
         /** If there is IP first element in service list is DUMMY */
         channelListSize = ipAndSomeOtherTunerType ? channelListSize + 1
@@ -521,7 +522,7 @@ public class DVBManager {
                     + channelNumber + ", List size is: " + getChannelListSize());
         }
         int numberOfDtvChannels = getChannelListSize()
-                - DTVActivity.sIpChannels.size();
+                - (mLiveRouteIp == -1 ? 0 : DTVActivity.sIpChannels.size());
         /** Return DTV channel */
         if (channelNumber < numberOfDtvChannels) {
             String channelName = mDTVManager

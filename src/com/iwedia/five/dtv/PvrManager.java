@@ -95,9 +95,9 @@ public class PvrManager {
      */
     public boolean showTeletext(int trackIndex) throws InternalException {
         mTeletextControl.setCurrentTeletextTrack(DVBManager.getInstance()
-                .getCurrentLiveRoute(), trackIndex);
+                .getPlaybackRouteIDMain(), trackIndex);
         if (mTeletextControl.getCurrentTeletextTrackIndex(DVBManager
-                .getInstance().getCurrentLiveRoute()) >= 0) {
+                .getInstance().getPlaybackRouteIDMain()) >= 0) {
             teletextActive = true;
         }
         return teletextActive;
@@ -110,9 +110,9 @@ public class PvrManager {
      */
     public void hideTeletext() throws InternalException {
         mTeletextControl.deselectCurrentTeletextTrack(DVBManager.getInstance()
-                .getCurrentLiveRoute());
+                .getPlaybackRouteIDMain());
         if (mTeletextControl.getCurrentTeletextTrackIndex(DVBManager
-                .getInstance().getCurrentLiveRoute()) < 0) {
+                .getInstance().getPlaybackRouteIDMain()) < 0) {
             teletextActive = false;
         }
     }
@@ -344,7 +344,7 @@ public class PvrManager {
      */
     public TeletextTrack getTeletextTrack(int index) {
         return mTeletextControl.getTeletextTrack(DVBManager.getInstance()
-                .getCurrentLiveRoute(), index);
+                .getPlaybackRouteIDMain(), index);
     }
 
     /**
@@ -352,7 +352,7 @@ public class PvrManager {
      */
     public void sendTeletextInputCommand(int keyCode) {
         mTeletextControl.sendInputControl(DVBManager.getInstance()
-                .getCurrentLiveRoute(), UserControl.PRESSED, keyCode);
+                .getPlaybackRouteIDMain(), UserControl.PRESSED, keyCode);
     }
 
     /**
@@ -362,7 +362,7 @@ public class PvrManager {
      */
     public int getTeletextTrackCount() {
         return mTeletextControl.getTeletextTrackCount(DVBManager.getInstance()
-                .getCurrentLiveRoute());
+                .getPlaybackRouteIDMain());
     }
 
     /**
@@ -421,9 +421,9 @@ public class PvrManager {
      */
     public boolean showSubtitles(int trackIndex) throws InternalException {
         mSubtitleControl.setCurrentSubtitleTrack(DVBManager.getInstance()
-                .getCurrentLiveRoute(), trackIndex);
+                .getPlaybackRouteIDMain(), trackIndex);
         if (mSubtitleControl.getCurrentSubtitleTrackIndex(DVBManager
-                .getInstance().getCurrentLiveRoute()) >= 0) {
+                .getInstance().getPlaybackRouteIDMain()) >= 0) {
             subtitleActive = true;
         }
         return subtitleActive;
@@ -436,9 +436,9 @@ public class PvrManager {
      */
     public void hideSubtitles() throws InternalException {
         mSubtitleControl.deselectCurrentSubtitleTrack(DVBManager.getInstance()
-                .getCurrentLiveRoute());
+                .getPlaybackRouteIDMain());
         if (mSubtitleControl.getCurrentSubtitleTrackIndex(DVBManager
-                .getInstance().getCurrentLiveRoute()) < 0) {
+                .getInstance().getPlaybackRouteIDMain()) < 0) {
             subtitleActive = false;
         }
     }
@@ -448,7 +448,7 @@ public class PvrManager {
      */
     public SubtitleTrack getSubtitleTrack(int index) {
         return mSubtitleControl.getSubtitleTrack(DVBManager.getInstance()
-                .getCurrentLiveRoute(), index);
+                .getPlaybackRouteIDMain(), index);
     }
 
     /**
@@ -458,7 +458,7 @@ public class PvrManager {
      */
     public int getSubtitlesTrackCount() {
         return mSubtitleControl.getSubtitleTrackCount(DVBManager.getInstance()
-                .getCurrentLiveRoute());
+                .getPlaybackRouteIDMain());
     }
 
     /**
@@ -466,7 +466,7 @@ public class PvrManager {
      */
     public int getAudioLanguagesTrackCount() {
         return mAudioControl.getAudioTrackCount(DVBManager.getInstance()
-                .getCurrentLiveRoute());
+                .getPlaybackRouteIDMain());
     }
 
     /**
@@ -474,7 +474,7 @@ public class PvrManager {
      */
     public AudioTrack getAudioLanguage(int index) {
         return mAudioControl.getAudioTrack(DVBManager.getInstance()
-                .getCurrentLiveRoute(), index);
+                .getPlaybackRouteIDMain(), index);
     }
 
     /**
@@ -482,7 +482,7 @@ public class PvrManager {
      */
     public void setAudioTrack(int index) throws InternalException {
         mAudioControl.setCurrentAudioTrack(DVBManager.getInstance()
-                .getCurrentLiveRoute(), index);
+                .getPlaybackRouteIDMain(), index);
     }
 
     /**
@@ -490,7 +490,7 @@ public class PvrManager {
      */
     public boolean isSubtitleActive() {
         if (mSubtitleControl.getCurrentSubtitleTrackIndex(DVBManager
-                .getInstance().getCurrentLiveRoute()) < 0) {
+                .getInstance().getPlaybackRouteIDMain()) < 0) {
             subtitleActive = false;
         } else {
             subtitleActive = true;
@@ -503,7 +503,7 @@ public class PvrManager {
      */
     public boolean isTeletextActive() {
         if (mTeletextControl.getCurrentTeletextTrackIndex(DVBManager
-                .getInstance().getCurrentLiveRoute()) < 0) {
+                .getInstance().getPlaybackRouteIDMain()) < 0) {
             teletextActive = false;
         } else {
             teletextActive = true;
