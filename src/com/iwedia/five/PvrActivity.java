@@ -74,7 +74,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class MainActivity extends DTVActivity {
+public class PvrActivity extends DTVActivity {
     public static final String TAG = "MainActivity";
     /** URI For VideoView. */
     public static final String TV_URI = "tv://";
@@ -182,10 +182,10 @@ public class MainActivity extends DTVActivity {
             mHandler.removeMessages(UiHandler.HIDE_PVR_INFO_MESSAGE);
             mHandler.sendEmptyMessageDelayed(UiHandler.HIDE_PVR_INFO_MESSAGE,
                     CHANNEL_VIEW_DURATION / 5);
-            MainActivity.this.runOnUiThread(new Runnable() {
+            PvrActivity.this.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(MainActivity.this, "Record stopped",
+                    Toast.makeText(PvrActivity.this, "Record stopped",
                             Toast.LENGTH_SHORT).show();
                 }
             });
@@ -195,10 +195,10 @@ public class MainActivity extends DTVActivity {
         @Override
         public void eventRecordStart(PvrEventRecordStart arg0) {
             Log.d(TAG, "\n\n\nRECORD STARTED");
-            MainActivity.this.runOnUiThread(new Runnable() {
+            PvrActivity.this.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(MainActivity.this, "Record started",
+                    Toast.makeText(PvrActivity.this, "Record started",
                             Toast.LENGTH_SHORT).show();
                 }
             });
@@ -609,13 +609,13 @@ public class MainActivity extends DTVActivity {
                                                             .getPvrManager()
                                                             .showTeletext(which)) {
                                                         Toast.makeText(
-                                                                MainActivity.this,
+                                                                PvrActivity.this,
                                                                 "Teletext started",
                                                                 Toast.LENGTH_SHORT)
                                                                 .show();
                                                     } else {
                                                         Toast.makeText(
-                                                                MainActivity.this,
+                                                                PvrActivity.this,
                                                                 "Teletext is not available",
                                                                 Toast.LENGTH_SHORT)
                                                                 .show();
@@ -683,13 +683,13 @@ public class MainActivity extends DTVActivity {
                                                             .showSubtitles(
                                                                     which)) {
                                                         Toast.makeText(
-                                                                MainActivity.this,
+                                                                PvrActivity.this,
                                                                 "Subtitle started",
                                                                 Toast.LENGTH_SHORT)
                                                                 .show();
                                                     } else {
                                                         Toast.makeText(
-                                                                MainActivity.this,
+                                                                PvrActivity.this,
                                                                 "Subtitle is not available",
                                                                 Toast.LENGTH_SHORT)
                                                                 .show();
