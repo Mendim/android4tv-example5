@@ -25,4 +25,12 @@
         android:id="@+id/menu_records"
         android:orderInCategory="100"
         android:title="Open PVR recorded media"/>
+    <item
+        android:id="@+id/menu_scheduled_records"
+        android:orderInCategory="100"
+        android:title="Open PVR scheduled records"/>
+    <item
+        android:id="@+id/menu_reminders"
+        android:orderInCategory="100"
+        android:title="Open list of reminders"/>
 </menu>

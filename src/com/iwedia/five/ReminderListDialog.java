@@ -14,27 +14,23 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
 
-import com.iwedia.dtv.pvr.MediaInfo;
 import com.iwedia.dtv.pvr.PvrSortMode;
 import com.iwedia.dtv.pvr.PvrSortOrder;
-import com.iwedia.dtv.types.InternalException;
+import com.iwedia.dtv.reminder.ReminderSmartInfo;
+import com.iwedia.dtv.reminder.ReminderTimerInfo;
 import com.iwedia.five.dtv.DVBManager;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 /**
  * Dialog that contains list of PVR records.
  */
-public class RecordListDialog extends ListDialog {
-    /** List of recorded media */
-    private ArrayList<MediaInfo> mRecords;
+public class ReminderListDialog extends ListDialog {
+    /** List of scheduled records. */
+    private ArrayList<Object> mReminders;
 
-    public RecordListDialog(Context context) {
+    public ReminderListDialog(Context context) {
         super(context);
     }
 
@@ -47,27 +43,20 @@ public class RecordListDialog extends ListDialog {
      */
     protected void createAlertDIalog(final int indexOfRecord) {
         AlertDialog.Builder builderSingle = new AlertDialog.Builder(mContext);
-        builderSingle.setTitle("Choose action");
-        builderSingle.setPositiveButton("Play",
+        builderSingle.setTitle("Delete reminder?");
+        builderSingle.setPositiveButton("Yes",
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        try {
-                            DVBManager.getInstance().getPvrManager()
-                                    .startPlayback(indexOfRecord);
-                        } catch (InternalException e) {
-                            e.printStackTrace();
-                        }
+                        DVBManager.getInstance().getReminderManager()
+                                .deleteReminder(indexOfRecord);
                         dialog.dismiss();
                     }
                 });
-        builderSingle.setNegativeButton("Delete",
+        builderSingle.setNegativeButton("No",
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        DVBManager.getInstance().getPvrManager()
-                                .deleteRecord(indexOfRecord);
-                        updateRecords();
                         dialog.dismiss();
                     }
                 });
@@ -78,13 +67,19 @@ public class RecordListDialog extends ListDialog {
      * Refresh records list.
      */
     protected void updateRecords() {
-        mRecords = DVBManager.getInstance().getPvrManager().getPvrRecordings();
+        mReminders = DVBManager.getInstance().getReminderManager()
+                .getReminders();
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(mContext,
                 android.R.layout.simple_list_item_1);
-        for (int i = 0; i < mRecords.size(); i++) {
-            MediaInfo info = mRecords.get(i);
-            arrayAdapter.add(info.getTitle()
-                    + (info.isIncomplete() ? " <!>" : ""));
+        for (int i = 0; i < mReminders.size(); i++) {
+            Object reminder = mReminders.get(i);
+            if (reminder instanceof ReminderSmartInfo) {
+                ReminderSmartInfo smartInfo = (ReminderSmartInfo) reminder;
+                arrayAdapter.add(smartInfo.getTitle());
+            } else if (reminder instanceof ReminderTimerInfo) {
+                ReminderTimerInfo timerInfo = (ReminderTimerInfo) reminder;
+                arrayAdapter.add(timerInfo.getTitle());
+            }
         }
         mListViewRecords.setAdapter(arrayAdapter);
     }
@@ -110,63 +105,73 @@ public class RecordListDialog extends ListDialog {
 
     @Override
     protected void itemSelected(int index) {
-        MediaInfo record = mRecords.get(index);
-        mTitle.setText(record.getTitle());
-        mDescription
-                .setText(record.getDescription().equals("") ? "No information available"
-                        : record.getDescription());
-        mStartTime.setText(sFormatDate.format(record.getStartTime()
-                .getCalendar().getTime()));
-        mDuration
-                .setText(sFormat.format(new Date(record.getDuration() * 1000)));
-        mSize.setText(humanReadableByteCount(record.getSize(), true));
+        Object reminder = mReminders.get(index);
+        if (reminder instanceof ReminderSmartInfo) {
+            ReminderSmartInfo smartInfo = (ReminderSmartInfo) reminder;
+            mTitle.setText(smartInfo.getTitle());
+            mDescription
+                    .setText(smartInfo.getDescription().equals("") ? "No information available"
+                            : smartInfo.getDescription());
+            mStartTime.setText(sFormatDate.format(smartInfo.getTime()
+                    .getCalendar().getTime()));
+            mDuration.setText("No information available");
+            mSize.setText("No information available");
+        } else if (reminder instanceof ReminderTimerInfo) {
+            ReminderTimerInfo timerInfo = (ReminderTimerInfo) reminder;
+            mTitle.setText(timerInfo.getTitle());
+            mDescription.setText("No information available");
+            mStartTime.setText(sFormatDate.format(timerInfo.getTime()
+                    .getCalendar().getTime()));
+            mDuration.setText("No information available");
+            mSize.setText("No information available");
+        }
     }
 
     @Override
     protected void buttonSortByDateAscClicked() {
-        DVBManager.getInstance().getPvrManager()
+        DVBManager.getInstance().getReminderManager()
                 .setSortMode(PvrSortMode.SORT_BY_DATE);
-        DVBManager.getInstance().getPvrManager()
+        DVBManager.getInstance().getReminderManager()
                 .setSortOrder(PvrSortOrder.SORT_ASCENDING);
     }
 
     @Override
     protected void buttonSortByDateDescClicked() {
-        DVBManager.getInstance().getPvrManager()
+        DVBManager.getInstance().getReminderManager()
                 .setSortMode(PvrSortMode.SORT_BY_DATE);
-        DVBManager.getInstance().getPvrManager()
+        DVBManager.getInstance().getReminderManager()
                 .setSortOrder(PvrSortOrder.SORT_DESCENDING);
     }
 
     @Override
     protected void buttonSortByDurationAscClicked() {
-        DVBManager.getInstance().getPvrManager()
+        DVBManager.getInstance().getReminderManager()
                 .setSortMode(PvrSortMode.SORT_BY_DURATION);
-        DVBManager.getInstance().getPvrManager()
+        DVBManager.getInstance().getReminderManager()
                 .setSortOrder(PvrSortOrder.SORT_ASCENDING);
     }
 
     @Override
     protected void buttonSortByDurationDescClicked() {
-        DVBManager.getInstance().getPvrManager()
+        DVBManager.getInstance().getReminderManager()
                 .setSortMode(PvrSortMode.SORT_BY_DURATION);
-        DVBManager.getInstance().getPvrManager()
+        DVBManager.getInstance().getReminderManager()
                 .setSortOrder(PvrSortOrder.SORT_DESCENDING);
     }
 
     @Override
     protected void buttonSortByNameAscClicked() {
-        DVBManager.getInstance().getPvrManager()
+        DVBManager.getInstance().getReminderManager()
                 .setSortMode(PvrSortMode.SORT_BY_NAME);
-        DVBManager.getInstance().getPvrManager()
+        DVBManager.getInstance().getReminderManager()
                 .setSortOrder(PvrSortOrder.SORT_ASCENDING);
     }
 
     @Override
     protected void buttonSortByNameDescClicked() {
-        DVBManager.getInstance().getPvrManager()
+        DVBManager.getInstance().getReminderManager()
                 .setSortMode(PvrSortMode.SORT_BY_NAME);
-        DVBManager.getInstance().getPvrManager()
+        DVBManager.getInstance().getReminderManager()
                 .setSortOrder(PvrSortOrder.SORT_DESCENDING);
     }
 }

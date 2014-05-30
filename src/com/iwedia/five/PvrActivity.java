@@ -90,6 +90,8 @@ public class PvrActivity extends DTVActivity {
     private SurfaceView mSurfaceView;
     private ChannelListDialog mChannelListDialog;
     private RecordListDialog mRecordListDialog;
+    private ScheduledRecordListDialog mScheduledRecordListDialog;
+    private ReminderListDialog mReminderListDialog;
     /**
      * PVR and Time shift stuff.
      */
@@ -395,6 +397,14 @@ public class PvrActivity extends DTVActivity {
                 mRecordListDialog.show();
                 return true;
             }
+            case R.id.menu_scheduled_records: {
+                mScheduledRecordListDialog.show();
+                return true;
+            }
+            case R.id.menu_reminders: {
+                mReminderListDialog.show();
+                return true;
+            }
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -444,6 +454,8 @@ public class PvrActivity extends DTVActivity {
     private void initializeDialogs() {
         mChannelListDialog = new ChannelListDialog(this);
         mRecordListDialog = new RecordListDialog(this);
+        mScheduledRecordListDialog = new ScheduledRecordListDialog(this);
+        mReminderListDialog = new ReminderListDialog(this);
         OnCancelListener listener = new OnCancelListener() {
             @Override
             public void onCancel(DialogInterface dialog) {
@@ -452,6 +464,8 @@ public class PvrActivity extends DTVActivity {
         };
         mChannelListDialog.setOnCancelListener(listener);
         mRecordListDialog.setOnCancelListener(listener);
+        mScheduledRecordListDialog.setOnCancelListener(listener);
+        mReminderListDialog.setOnCancelListener(listener);
     }
 
     /**

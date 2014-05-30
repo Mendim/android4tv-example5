@@ -59,6 +59,8 @@ public class DVBManager {
      * PVR and Time shift stuff
      */
     private PvrManager mPvrManager = null;
+    /** Reminder manager */
+    private ReminderManager mReminderManager = null;
     private static DVBManager instance;
 
     public static DVBManager getInstance() {
@@ -79,6 +81,7 @@ public class DVBManager {
     private void initializeDTVService() {
         initializeRouteId();
         mPvrManager = PvrManager.getInstance(mDTVManager);
+        mReminderManager = ReminderManager.getInstance(mDTVManager);
     }
 
     /**
@@ -574,5 +577,9 @@ public class DVBManager {
 
     public PvrManager getPvrManager() {
         return mPvrManager;
+    }
+
+    public ReminderManager getReminderManager() {
+        return mReminderManager;
     }
 }

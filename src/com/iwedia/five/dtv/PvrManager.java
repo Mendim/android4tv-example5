@@ -20,6 +20,7 @@ import com.iwedia.dtv.dtvmanager.IDTVManager;
 import com.iwedia.dtv.pvr.IPvrCallback;
 import com.iwedia.dtv.pvr.IPvrControl;
 import com.iwedia.dtv.pvr.MediaInfo;
+import com.iwedia.dtv.pvr.PvrRecordType;
 import com.iwedia.dtv.pvr.PvrSortMode;
 import com.iwedia.dtv.pvr.PvrSortOrder;
 import com.iwedia.dtv.pvr.TimeshiftInfo;
@@ -260,6 +261,27 @@ public class PvrManager {
     }
 
     /**
+     * Retrieves list of scheduled records.
+     * 
+     * @return List of scheduled records.
+     */
+    public ArrayList<Object> getPvrScheduledRecords() {
+        ArrayList<Object> records = new ArrayList<Object>();
+        int numberOfMediaRecords = mPvrControl.updateRecordList();
+        for (int i = 0; i < numberOfMediaRecords; i++) {
+            PvrRecordType type = mPvrControl.getRecordType(i);
+            if (type == PvrRecordType.ONTOUCH) {
+                records.add(mPvrControl.getOnTouchInfo(i));
+            } else if (type == PvrRecordType.SMART) {
+                records.add(mPvrControl.getSmartInfo(i));
+            } else {
+                records.add(mPvrControl.getTimerInfo(i));
+            }
+        }
+        return records;
+    }
+
+    /**
      * Delete PVR record.
      * 
      * @param index
@@ -267,6 +289,16 @@ public class PvrManager {
      */
     public void deleteRecord(int index) {
         mPvrControl.deleteMedia(index);
+    }
+
+    /**
+     * Delete scheduled PVR record.
+     * 
+     * @param index
+     *        of scheduled record to delete.
+     */
+    public void deleteScheduledRecord(int index) {
+        mPvrControl.destroyRecord(index);
     }
 
     /**
@@ -323,6 +355,23 @@ public class PvrManager {
     }
 
     /**
+     * Sets desired sort mode.
+     * 
+     * @param order
+     *        New sort mode to set.
+     */
+    public void setScheduledSortMode(PvrSortMode mode) {
+        mPvrControl.setRecordListSortMode(mode);
+    }
+
+    /**
+     * Returns active sort mode.
+     */
+    public PvrSortMode getScheduledSortMode() {
+        return mPvrControl.getRecordListSortMode();
+    }
+
+    /**
      * Sets desired sort order.
      * 
      * @param order
@@ -337,6 +386,23 @@ public class PvrManager {
      */
     public PvrSortOrder getSortOrder() {
         return mPvrControl.getMediaListSortOrder();
+    }
+
+    /**
+     * Sets desired sort order.
+     * 
+     * @param order
+     *        New sort order to set.
+     */
+    public void setScheduledSortOrder(PvrSortOrder order) {
+        mPvrControl.setRecordListSortOrder(order);
+    }
+
+    /**
+     * Returns active sort order.
+     */
+    public PvrSortOrder getScheduledSortOrder() {
+        return mPvrControl.getRecordListSortOrder();
     }
 
     /**
