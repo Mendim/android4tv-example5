@@ -62,6 +62,10 @@ import com.iwedia.dtv.pvr.PvrEventTimeshiftPosition;
 import com.iwedia.dtv.pvr.PvrEventTimeshiftSpeed;
 import com.iwedia.dtv.pvr.PvrEventTimeshiftStart;
 import com.iwedia.dtv.pvr.PvrEventTimeshiftStop;
+import com.iwedia.dtv.reminder.IReminderCallback;
+import com.iwedia.dtv.reminder.ReminderEventAdd;
+import com.iwedia.dtv.reminder.ReminderEventRemove;
+import com.iwedia.dtv.reminder.ReminderEventTrigger;
 import com.iwedia.dtv.subtitle.SubtitleTrack;
 import com.iwedia.dtv.teletext.TeletextTrack;
 import com.iwedia.dtv.types.InternalException;
@@ -92,6 +96,7 @@ public class PvrActivity extends DTVActivity {
     private RecordListDialog mRecordListDialog;
     private ScheduledRecordListDialog mScheduledRecordListDialog;
     private ReminderListDialog mReminderListDialog;
+    private AlertDialog mReminderDialog;
     /**
      * PVR and Time shift stuff.
      */
@@ -311,6 +316,35 @@ public class PvrActivity extends DTVActivity {
         public void eventDeviceError() {
         }
     };
+    private IReminderCallback mReminderCallback = new IReminderCallback() {
+        @Override
+        public void reminderTrigger(ReminderEventTrigger arg0) {
+            Log.d(TAG, "\n\n\nREMINDER TRIGGERED: " + arg0.getTitle());
+            ChannelInfo info = mDVBManager.getChannelInfo(arg0
+                    .getServiceIndex()
+                    - (mDVBManager.isIpAndSomeOtherTunerType() ? 1 : 0));
+            mReminderDialog.setMessage(arg0.getTitle() + " - ["
+                    + info.getName() + "]");
+            Message.obtain(mHandler, UiHandler.REMINDER_TRIGGERED,
+                    mReminderDialog).sendToTarget();
+        }
+
+        @Override
+        public void reminderRemove(ReminderEventRemove arg0) {
+            Log.d(TAG, "\n\n\nREMINDER REMOVED: " + arg0.getTitle());
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(PvrActivity.this, "Reminder removed!",
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @Override
+        public void reminderAdd(ReminderEventAdd arg0) {
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -345,6 +379,7 @@ public class PvrActivity extends DTVActivity {
         // finishActivity();
         // }
         mDVBManager.getPvrManager().registerPvrCallback(mPvrCallback);
+        mDVBManager.getReminderManager().registerCallback(mReminderCallback);
     }
 
     @Override
@@ -466,6 +501,19 @@ public class PvrActivity extends DTVActivity {
         mRecordListDialog.setOnCancelListener(listener);
         mScheduledRecordListDialog.setOnCancelListener(listener);
         mReminderListDialog.setOnCancelListener(listener);
+        /**
+         * Initialize alert dialog.
+         */
+        AlertDialog.Builder builderSingle = new AlertDialog.Builder(this);
+        builderSingle.setTitle("Reminder triggered");
+        builderSingle.setNegativeButton("Close",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        mReminderDialog = builderSingle.create();
     }
 
     /**
@@ -911,7 +959,7 @@ public class PvrActivity extends DTVActivity {
                 HIDE_PVR_INFO_MESSAGE = 1, REFRESH_TIMESHIFT_PLAYBACK = 2,
                 REFRESH_PVR_PLAYBACK = 3, SHOW_RECORDS_DIALOG = 4,
                 HIDE_RECORDS_DIALOG = 5, REFRESH_PVR_RECORD_PLAYBACK = 6,
-                REFRESH_PLAYBACK_SPEED = 7;
+                REFRESH_PLAYBACK_SPEED = 7, REMINDER_TRIGGERED = 8;;
         private View mChannelContainer, mPvrContainer;
         /** PVR info container views */
         private TextView mPvrInfoPosition, mPvrInfoAvailablePosition,
@@ -1006,6 +1054,11 @@ public class PvrActivity extends DTVActivity {
                 case HIDE_RECORDS_DIALOG: {
                     Dialog dialog = (Dialog) msg.obj;
                     dialog.cancel();
+                    break;
+                }
+                case REMINDER_TRIGGERED: {
+                    Dialog dialog = (Dialog) msg.obj;
+                    dialog.show();
                     break;
                 }
             }

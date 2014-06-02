@@ -315,6 +315,7 @@ public class DVBManager {
      */
     public void stopDTV() throws InternalException {
         mPvrManager.unregisterPvrCallback();
+        mReminderManager.unregisterCallback();
         if (mPvrManager.isTimeShftActive()) {
             mPvrManager.stopTimeShift();
         }

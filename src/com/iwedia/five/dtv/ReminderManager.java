@@ -10,16 +10,21 @@
  */
 package com.iwedia.five.dtv;
 
+import android.util.Log;
+
 import com.iwedia.dtv.dtvmanager.IDTVManager;
 import com.iwedia.dtv.pvr.PvrSortMode;
 import com.iwedia.dtv.pvr.PvrSortOrder;
+import com.iwedia.dtv.reminder.IReminderCallback;
 import com.iwedia.dtv.reminder.IReminderControl;
 import com.iwedia.dtv.reminder.ReminderType;
 
 import java.util.ArrayList;
 
 public class ReminderManager {
+    public static final String TAG = "DVBManager";
     private IReminderControl mReminderControl;
+    private IReminderCallback mReminderCallback;
     private static ReminderManager sInstance;
 
     protected static ReminderManager getInstance(IDTVManager mDTVManager) {
@@ -31,6 +36,28 @@ public class ReminderManager {
 
     private ReminderManager(IDTVManager mDTVManager) {
         mReminderControl = mDTVManager.getReminderControl();
+    }
+
+    /**
+     * Register reminder callback.
+     * 
+     * @param callback
+     *        Callback to register.
+     */
+    public void registerCallback(IReminderCallback callback) {
+        mReminderCallback = callback;
+        mReminderControl.registerCallback(callback);
+    }
+
+    /**
+     * Unregisters previously setted callback.
+     */
+    public void unregisterCallback() {
+        try {
+            mReminderControl.unregisterCallback(mReminderCallback);
+        } catch (IllegalArgumentException e) {
+            Log.d(TAG, "Reminder callback is not setted at all!");
+        }
     }
 
     /**
