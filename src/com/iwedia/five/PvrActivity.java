@@ -78,7 +78,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class PvrActivity extends DTVActivity {
+public class PvrActivity extends DTVActivity implements
+        MediaMountedReceiver.MediaCallback {
     public static final String TAG = "MainActivity";
     /** URI For VideoView. */
     public static final String TV_URI = "tv://";
@@ -380,6 +381,7 @@ public class PvrActivity extends DTVActivity {
         // }
         mDVBManager.getPvrManager().registerPvrCallback(mPvrCallback);
         mDVBManager.getReminderManager().registerCallback(mReminderCallback);
+        MediaMountedReceiver.getInstance().setMediaCallback(this);
     }
 
     @Override
@@ -403,6 +405,7 @@ public class PvrActivity extends DTVActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        MediaMountedReceiver.getInstance().setMediaCallback(null);
         try {
             mDVBManager.stopDTV();
         } catch (InternalException e) {
@@ -1253,5 +1256,31 @@ public class PvrActivity extends DTVActivity {
         public PvrEventPlaybackPosition getPositionObject() {
             return mPositionObject;
         }
+    }
+
+    @Override
+    public void mediaMounted(String mediaPath) {
+        mDVBManager.getPvrManager().setMediaPath(mediaPath);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(PvrActivity.this,
+                        "USB inserted, you can now use PVR", Toast.LENGTH_LONG)
+                        .show();
+            }
+        });
+    }
+
+    @Override
+    public void mediaUnmounted(String mediaPath) {
+        mDVBManager.getPvrManager().setMediaPath(null);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(PvrActivity.this,
+                        "USB removed, you can not use PVR anymore",
+                        Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

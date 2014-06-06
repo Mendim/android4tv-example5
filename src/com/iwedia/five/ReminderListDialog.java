@@ -126,6 +126,15 @@ public class ReminderListDialog extends ListDialog {
             mSize.setText("No information available");
         }
     }
+    
+    @Override
+    protected void nothingSelected() {
+        mTitle.setText("");
+        mDescription.setText("");
+        mStartTime.setText("");
+        mDuration.setText("");
+        mSize.setText("");
+    }
 
     @Override
     protected void buttonSortByDateAscClicked() {

@@ -123,6 +123,15 @@ public class RecordListDialog extends ListDialog {
     }
 
     @Override
+    protected void nothingSelected() {
+        mTitle.setText("");
+        mDescription.setText("");
+        mStartTime.setText("");
+        mDuration.setText("");
+        mSize.setText("");
+    }
+
+    @Override
     protected void buttonSortByDateAscClicked() {
         DVBManager.getInstance().getPvrManager()
                 .setSortMode(PvrSortMode.SORT_BY_DATE);

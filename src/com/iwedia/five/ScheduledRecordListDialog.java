@@ -156,6 +156,15 @@ public class ScheduledRecordListDialog extends ListDialog {
     }
 
     @Override
+    protected void nothingSelected() {
+        mTitle.setText("");
+        mDescription.setText("");
+        mStartTime.setText("");
+        mDuration.setText("");
+        mSize.setText("");
+    }
+
+    @Override
     protected void buttonSortByDateAscClicked() {
         DVBManager.getInstance().getPvrManager()
                 .setScheduledSortMode(PvrSortMode.SORT_BY_DATE);

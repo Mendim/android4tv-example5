@@ -216,6 +216,16 @@ public class PvrManager {
     }
 
     /**
+     * Sets PVR media path.
+     * 
+     * @param mediaPath
+     *        Path to set.
+     */
+    public void setMediaPath(String mediaPath) {
+        mPvrControl.setDevicePath(mediaPath);
+    }
+
+    /**
      * Starts one touch PVR
      * 
      * @throws InternalException

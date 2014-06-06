@@ -87,6 +87,11 @@ public abstract class ListDialog extends Dialog implements
     protected abstract void itemSelected(int index);
 
     /**
+     * Refresh record description.
+     */
+    protected abstract void nothingSelected();
+
+    /**
      * Sort by date ascending click listener.
      */
     protected abstract void buttonSortByDateAscClicked();
@@ -129,6 +134,7 @@ public abstract class ListDialog extends Dialog implements
 
     @Override
     public void onNothingSelected(AdapterView<?> arg0) {
+        nothingSelected();
     }
 
     /**
