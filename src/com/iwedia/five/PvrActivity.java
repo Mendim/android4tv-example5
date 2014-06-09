@@ -422,6 +422,16 @@ public class PvrActivity extends DTVActivity implements
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem checkable = menu.findItem(R.id.menu_timeshift_buffer_size_256);
+        int size = mDVBManager.getPvrManager().getTimeShiftBufferSize();
+        checkable.setChecked(size == 256);
+        checkable = menu.findItem(R.id.menu_timeshift_buffer_size_512);
+        checkable.setChecked(size == 512);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
@@ -441,6 +451,16 @@ public class PvrActivity extends DTVActivity implements
             }
             case R.id.menu_reminders: {
                 mReminderListDialog.show();
+                return true;
+            }
+            case R.id.menu_timeshift_buffer_size_256: {
+                item.setChecked(true);
+                mDVBManager.getPvrManager().setTimeShiftBufferSize(256);
+                return true;
+            }
+            case R.id.menu_timeshift_buffer_size_512: {
+                item.setChecked(true);
+                mDVBManager.getPvrManager().setTimeShiftBufferSize(512);
                 return true;
             }
             default:
@@ -926,6 +946,8 @@ public class PvrActivity extends DTVActivity implements
                         showPvrInfo();
                     } catch (InternalException e) {
                         e.printStackTrace();
+                        Toast.makeText(this, "There is no USB device",
+                                Toast.LENGTH_SHORT).show();
                     }
                 }
                 return true;
