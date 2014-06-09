@@ -24,7 +24,7 @@
     <item
         android:id="@+id/menu_records"
         android:orderInCategory="100"
-        android:title="Open PVR recorded media"/>
+        android:title="Open PVR playlist"/>
     <item
         android:id="@+id/menu_scheduled_records"
         android:orderInCategory="100"
@@ -33,4 +33,22 @@
         android:id="@+id/menu_reminders"
         android:orderInCategory="100"
         android:title="Open list of reminders"/>
+    <item
+        android:orderInCategory="100"
+        android:title="Timeshift settings">
+        <menu>
+            <group
+                android:id="@+id/group_subtitles_mode"
+                android:checkableBehavior="single" >
+                <item
+                    android:id="@+id/menu_timeshift_buffer_size_256"
+                    android:checkable="true"
+                    android:title="Buffer size - 256 MB"/>
+                <item
+                    android:id="@+id/menu_timeshift_buffer_size_512"
+                    android:checkable="true"
+                    android:title="Buffer size - 512 MB"/>
+            </group>
+        </menu>
+    </item>
 </menu>

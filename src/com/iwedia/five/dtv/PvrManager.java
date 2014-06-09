@@ -162,6 +162,16 @@ public class PvrManager {
     }
 
     /**
+     * Sets size of timeshift buffer.
+     * 
+     * @param sizeInMegabytes
+     *        Size of timeshift buffer.
+     */
+    public void setTimeShiftBufferSize(int sizeInMegabytes) {
+        mPvrControl.setTimeshiftBufferSize(sizeInMegabytes);
+    }
+
+    /**
      * Changes playback speed.
      */
     public void fastForward() {

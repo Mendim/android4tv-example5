@@ -92,6 +92,9 @@ public class ScheduledRecordListDialog extends ListDialog {
             }
         }
         mListViewRecords.setAdapter(arrayAdapter);
+        if(arrayAdapter.getCount()==0){
+            nothingSelected();
+        }
     }
 
     /**

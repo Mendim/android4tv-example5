@@ -74,6 +74,8 @@ import com.iwedia.five.dtv.IPService;
 import com.iwedia.five.dtv.PvrManager;
 import com.iwedia.five.dtv.PvrSpeedMode;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -206,7 +208,7 @@ public class PvrActivity extends DTVActivity implements
             PvrActivity.this.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(PvrActivity.this, "Record started",
+                    Toast.makeText(PvrActivity.this, "Recording started",
                             Toast.LENGTH_SHORT).show();
                 }
             });
@@ -382,6 +384,8 @@ public class PvrActivity extends DTVActivity implements
         mDVBManager.getPvrManager().registerPvrCallback(mPvrCallback);
         mDVBManager.getReminderManager().registerCallback(mReminderCallback);
         MediaMountedReceiver.getInstance().setMediaCallback(this);
+        /** Check for inserted external media. */
+        getExternalMedia();
     }
 
     @Override
@@ -422,6 +426,16 @@ public class PvrActivity extends DTVActivity implements
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem checkable = menu.findItem(R.id.menu_timeshift_buffer_size_256);
+        int size = mDVBManager.getPvrManager().getTimeShiftBufferSize();
+        checkable.setChecked(size == 256);
+        checkable = menu.findItem(R.id.menu_timeshift_buffer_size_512);
+        checkable.setChecked(size == 512);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
@@ -443,8 +457,37 @@ public class PvrActivity extends DTVActivity implements
                 mReminderListDialog.show();
                 return true;
             }
+            case R.id.menu_timeshift_buffer_size_256: {
+                item.setChecked(true);
+                mDVBManager.getPvrManager().setTimeShiftBufferSize(256);
+                return true;
+            }
+            case R.id.menu_timeshift_buffer_size_512: {
+                item.setChecked(true);
+                mDVBManager.getPvrManager().setTimeShiftBufferSize(512);
+                return true;
+            }
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    /**
+     * Check for inserted external media.
+     */
+    private void getExternalMedia() {
+        File media = new File("/mnt/media/");
+        File[] files = media.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String filename) {
+                if (filename.contains("usb.")) {
+                    return true;
+                }
+                return false;
+            }
+        });
+        if (files != null && files.length > 0) {
+            mDVBManager.getPvrManager().setMediaPath(files[0].getPath());
         }
     }
 
@@ -926,6 +969,8 @@ public class PvrActivity extends DTVActivity implements
                         showPvrInfo();
                     } catch (InternalException e) {
                         e.printStackTrace();
+                        Toast.makeText(this, "There is no USB device",
+                                Toast.LENGTH_SHORT).show();
                     }
                 }
                 return true;
