@@ -74,6 +74,8 @@ import com.iwedia.five.dtv.IPService;
 import com.iwedia.five.dtv.PvrManager;
 import com.iwedia.five.dtv.PvrSpeedMode;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -206,7 +208,7 @@ public class PvrActivity extends DTVActivity implements
             PvrActivity.this.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(PvrActivity.this, "Record started",
+                    Toast.makeText(PvrActivity.this, "Recording started",
                             Toast.LENGTH_SHORT).show();
                 }
             });
@@ -382,6 +384,8 @@ public class PvrActivity extends DTVActivity implements
         mDVBManager.getPvrManager().registerPvrCallback(mPvrCallback);
         mDVBManager.getReminderManager().registerCallback(mReminderCallback);
         MediaMountedReceiver.getInstance().setMediaCallback(this);
+        /** Check for inserted external media. */
+        getExternalMedia();
     }
 
     @Override
@@ -465,6 +469,25 @@ public class PvrActivity extends DTVActivity implements
             }
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    /**
+     * Check for inserted external media.
+     */
+    private void getExternalMedia() {
+        File media = new File("/mnt/media/");
+        File[] files = media.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String filename) {
+                if (filename.contains("usb.")) {
+                    return true;
+                }
+                return false;
+            }
+        });
+        if (files != null && files.length > 0) {
+            mDVBManager.getPvrManager().setMediaPath(files[0].getPath());
         }
     }
 

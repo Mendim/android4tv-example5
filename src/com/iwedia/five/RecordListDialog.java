@@ -48,7 +48,7 @@ public class RecordListDialog extends ListDialog {
     protected void createAlertDIalog(final int indexOfRecord) {
         AlertDialog.Builder builderSingle = new AlertDialog.Builder(mContext);
         builderSingle.setTitle("Choose action");
-        builderSingle.setPositiveButton("Play",
+        builderSingle.setNegativeButton("Play",
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -61,7 +61,7 @@ public class RecordListDialog extends ListDialog {
                         dialog.dismiss();
                     }
                 });
-        builderSingle.setNegativeButton("Delete",
+        builderSingle.setPositiveButton("Delete",
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -87,6 +87,9 @@ public class RecordListDialog extends ListDialog {
                     + (info.isIncomplete() ? " <!>" : ""));
         }
         mListViewRecords.setAdapter(arrayAdapter);
+        if (arrayAdapter.getCount() == 0) {
+            nothingSelected();
+        }
     }
 
     /**
