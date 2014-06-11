@@ -926,11 +926,13 @@ public class PvrActivity extends DTVActivity implements
                 } else {
                     try {
                         mDVBManager.getPvrManager().startTimeShift();
+                        showPvrInfo();
                     } catch (InternalException e) {
                         e.printStackTrace();
+                        Toast.makeText(this, "There is no USB device",
+                                Toast.LENGTH_SHORT).show();
                     }
                 }
-                showPvrInfo();
                 return true;
             }
             case KeyEvent.KEYCODE_MEDIA_STOP: {
