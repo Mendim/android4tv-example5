@@ -54,8 +54,12 @@ public class ChannelListDialog extends Dialog implements OnItemClickListener {
         super.show();
         mChannelList.setAdapter(new ChannelListAdapter(mContext, DVBManager
                 .getInstance().getChannelNames()));
-        mChannelList.setSelection(DVBManager.getInstance()
-                .getCurrentChannelNumber());
+        try {
+            mChannelList.setSelection(DVBManager.getInstance()
+                    .getCurrentChannelNumber());
+        } catch (InternalException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

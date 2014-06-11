@@ -334,7 +334,13 @@ public class DVBManager {
      * @throws IllegalArgumentException
      */
     public ChannelInfo changeChannelUp() throws InternalException {
-        return changeChannelByNumber((getCurrentChannelNumber() + 1)
+        int currentChannel = 0;
+        try {
+            currentChannel = getCurrentChannelNumber();
+        } catch (InternalException e) {
+            currentChannel = DTVActivity.getLastWatchedChannelIndex();
+        }
+        return changeChannelByNumber((currentChannel + 1)
                 % (getChannelListSize()));
     }
 
@@ -346,7 +352,12 @@ public class DVBManager {
      * @throws IllegalArgumentException
      */
     public ChannelInfo changeChannelDown() throws InternalException {
-        int currentChannelNumber = getCurrentChannelNumber();
+        int currentChannelNumber = 0;
+        try {
+            currentChannelNumber = getCurrentChannelNumber();
+        } catch (InternalException e) {
+            currentChannelNumber = DTVActivity.getLastWatchedChannelIndex();
+        }
         int listSize = getChannelListSize();
         return changeChannelByNumber((--currentChannelNumber + listSize)
                 % listSize);
@@ -503,14 +514,19 @@ public class DVBManager {
     /**
      * Get Current Channel Number.
      */
-    public int getCurrentChannelNumber() {
+    public int getCurrentChannelNumber() throws InternalException {
         /** For IP */
         if (mCurrentLiveRoute == mLiveRouteIp) {
             return mCurrentChannelNumberIp;
         }
-        return (int) (mDTVManager.getServiceControl().getActiveService(
-                mCurrentLiveRoute).getServiceIndex())
-                - (ipAndSomeOtherTunerType ? 1 : 0);
+        int current = (mDTVManager.getServiceControl().getActiveService(
+                mCurrentLiveRoute).getServiceIndex());
+        current = current - (ipAndSomeOtherTunerType ? 1 : 0);
+        /** This is error in comedia and should be ignored. */
+        if (current < 0) {
+            throw new InternalException();
+        }
+        return current;
     }
 
     /**

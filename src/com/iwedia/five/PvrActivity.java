@@ -279,7 +279,9 @@ public class PvrActivity extends DTVActivity implements
         public void eventPlaybackPosition(
                 PvrEventPlaybackPosition pvrEventPlaybackPosition) {
             Log.d(TAG, "\n\n\nRECORD EVENT PLAYBACK POSITION: "
-                    + pvrEventPlaybackPosition.getTimePosition());
+                    + pvrEventPlaybackPosition.getTimePosition()
+                    + ", IS BEGIN: " + pvrEventPlaybackPosition.isBegin()
+                    + ", IS END: " + pvrEventPlaybackPosition.isEnd());
             if (pvrEventPlaybackPosition.isBegin()) {
                 mDVBManager.getPvrManager().resetSpeedIndexes();
                 mDVBManager.getPvrManager().setPvrSpeed(
@@ -899,7 +901,13 @@ public class PvrActivity extends DTVActivity implements
                     showPvrInfo();
                     return true;
                 }
-                int currentChannel = mDVBManager.getCurrentChannelNumber();
+                int currentChannel = 0;
+                try {
+                    currentChannel = mDVBManager.getCurrentChannelNumber();
+                } catch (InternalException e) {
+                    e.printStackTrace();
+                    currentChannel = DTVActivity.getLastWatchedChannelIndex();
+                }
                 if (currentChannel > 0) {
                     showChannelInfo(mDVBManager.getChannelInfo(currentChannel));
                 }
