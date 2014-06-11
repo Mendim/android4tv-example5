@@ -35,6 +35,8 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
+import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -81,7 +83,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class PvrActivity extends DTVActivity implements
-        MediaMountedReceiver.MediaCallback {
+        MediaMountedReceiver.MediaCallback, OnMenuItemClickListener {
     public static final String TAG = "MainActivity";
     /** URI For VideoView. */
     public static final String TV_URI = "tv://";
@@ -100,6 +102,7 @@ public class PvrActivity extends DTVActivity implements
     private ScheduledRecordListDialog mScheduledRecordListDialog;
     private ReminderListDialog mReminderListDialog;
     private AlertDialog mReminderDialog;
+    private PopupMenu mPopup;
     /**
      * PVR and Time shift stuff.
      */
@@ -251,6 +254,11 @@ public class PvrActivity extends DTVActivity implements
             mDVBManager.getPvrManager().setPvrPlaybackActive(false);
             Message.obtain(mHandler, UiHandler.SHOW_RECORDS_DIALOG,
                     mRecordListDialog).sendToTarget();
+            try {
+                mDVBManager.changeChannelByNumber(getLastWatchedChannelIndex());
+            } catch (InternalException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
@@ -420,25 +428,34 @@ public class PvrActivity extends DTVActivity implements
         sIpChannels = null;
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem checkable = menu.findItem(R.id.menu_timeshift_buffer_size_256);
+    /** Listener for menu button click */
+    public void onClickMenu(View v) {
+        // openOptionsMenu();
+        if (v == null) {
+            v = findViewById(R.id.menu_view);
+        }
+        // create popup menu
+        if (mPopup == null) {
+            mPopup = new PopupMenu(this, v);
+            mPopup.setOnMenuItemClickListener(this);
+            MenuInflater inflater = mPopup.getMenuInflater();
+            inflater.inflate(R.menu.main, mPopup.getMenu());
+        }
+        /**
+         * Set menu states
+         */
+        MenuItem checkable = mPopup.getMenu().findItem(
+                R.id.menu_timeshift_buffer_size_256);
         int size = mDVBManager.getPvrManager().getTimeShiftBufferSize();
         checkable.setChecked(size == 256);
-        checkable = menu.findItem(R.id.menu_timeshift_buffer_size_512);
+        checkable = mPopup.getMenu().findItem(
+                R.id.menu_timeshift_buffer_size_512);
         checkable.setChecked(size == 512);
-        return true;
+        mPopup.show();
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onMenuItemClick(final MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
             case R.id.menu_scan_usb: {
@@ -470,7 +487,7 @@ public class PvrActivity extends DTVActivity implements
                 return true;
             }
             default:
-                return super.onOptionsItemSelected(item);
+                return false;
         }
     }
 
@@ -607,6 +624,15 @@ public class PvrActivity extends DTVActivity implements
         // mHandler.removeMessages(UiHandler.HIDE_PVR_INFO_MESSAGE);
         // mHandler.sendEmptyMessageDelayed(UiHandler.HIDE_PVR_INFO_MESSAGE,
         // CHANNEL_VIEW_DURATION);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
+            onClickMenu(null);
+            return true;
+        }
+        return super.onKeyUp(keyCode, event);
     }
 
     /**
@@ -1099,6 +1125,7 @@ public class PvrActivity extends DTVActivity implements
                     break;
                 }
                 case REFRESH_PLAYBACK_SPEED: {
+                    mPvrContainer.setVisibility(View.VISIBLE);
                     String speed = (String) msg.obj;
                     Log.d(TAG, "PLAYBACK SPEED: " + speed);
                     mPvrPlaybackSpeed.setText(speed);

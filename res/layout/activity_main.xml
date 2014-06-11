@@ -28,6 +28,13 @@
         android:id="@+id/surfaceView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+    <View
+        android:id="@+id/menu_view"
+        android:layout_width="20dp"
+        android:layout_height="2dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:focusable="false" />
     <!-- Channel name and number -->
     <LinearLayout
         android:id="@+id/linearlayout_channel_container"
