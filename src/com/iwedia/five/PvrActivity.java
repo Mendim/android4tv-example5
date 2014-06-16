@@ -1355,6 +1355,12 @@ public class PvrActivity extends DTVActivity implements
 
     @Override
     public void mediaUnmounted(String mediaPath) {
+        /**
+         * Stop PVR if it is active.
+         */
+        if (mDVBManager.getPvrManager().isPvrActive()) {
+            mDVBManager.getPvrManager().stopPvr();
+        }
         mDVBManager.getPvrManager().setMediaPath(null);
         runOnUiThread(new Runnable() {
             @Override

@@ -58,6 +58,7 @@ public abstract class DTVActivity extends Activity {
                 WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
         /** Creates dtv manager object and connects it to service. */
         mDVBManager = DVBManager.getInstance();
+        mDVBManager.registerCallbacks();
         initializeIpChannels();
     }
 
