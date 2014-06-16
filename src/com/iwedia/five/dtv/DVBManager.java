@@ -28,6 +28,7 @@ import com.iwedia.dtv.service.ServiceDescriptor;
 import com.iwedia.dtv.service.SourceType;
 import com.iwedia.dtv.types.InternalException;
 import com.iwedia.five.DTVActivity;
+import com.iwedia.five.callbacks.ScanCallBack;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -85,6 +86,14 @@ public class DVBManager {
     }
 
     /**
+     * Registers callbacks
+     */
+    public void registerCallbacks() {
+        mDTVManager.getScanControl().registerCallback(
+                ScanCallBack.getInstance());
+    }
+
+    /**
      * Initialize Descriptors For Live Route.
      * 
      * @throws RemoteException
@@ -134,6 +143,8 @@ public class DVBManager {
                             mLiveRouteSat = getLiveRouteId(frontendDescriptor,
                                     demuxDescriptor, decoderDescriptor,
                                     outputDescriptor, broadcastRouteControl);
+                            FrontendManager.frontendFound(new Frontend(
+                                    mLiveRouteSat, i));
                         }
                         /**
                          * RETRIEVE RECORD ROUTES
@@ -153,6 +164,8 @@ public class DVBManager {
                             mLiveRouteCab = getLiveRouteId(frontendDescriptor,
                                     demuxDescriptor, decoderDescriptor,
                                     outputDescriptor, broadcastRouteControl);
+                            FrontendManager.frontendFound(new Frontend(
+                                    mLiveRouteCab, i));
                         }
                         /**
                          * RETRIEVE RECORD ROUTES
@@ -172,6 +185,8 @@ public class DVBManager {
                             mLiveRouteTer = getLiveRouteId(frontendDescriptor,
                                     demuxDescriptor, decoderDescriptor,
                                     outputDescriptor, broadcastRouteControl);
+                            FrontendManager.frontendFound(new Frontend(
+                                    mLiveRouteTer, i));
                         }
                         /**
                          * RETRIEVE RECORD ROUTES
@@ -191,6 +206,8 @@ public class DVBManager {
                             mLiveRouteIp = getLiveRouteId(frontendDescriptor,
                                     demuxDescriptor, decoderDescriptor,
                                     outputDescriptor, broadcastRouteControl);
+                            FrontendManager.frontendFound(new Frontend(
+                                    mLiveRouteIp, i));
                         }
                         /**
                          * RETRIEVE RECORD ROUTES
@@ -254,6 +271,9 @@ public class DVBManager {
         if (mPvrManager.isPvrActive()) {
             mPvrManager.stopPvr();
         }
+        mDTVManager.getScanControl().unregisterCallback(
+                ScanCallBack.getInstance());
+        ScanCallBack.destroyInstance();
         mDTVManager.getVideoControl().videoBlank(mPlaybackRouteIDMain, false);
         mDTVManager.getServiceControl().stopService(mCurrentLiveRoute);
     }
@@ -498,6 +518,25 @@ public class DVBManager {
         else {
             return new ChannelInfo(channelNumber + 1, DTVActivity.sIpChannels
                     .get(channelNumber - numberOfDtvChannels).getName());
+        }
+    }
+
+    /**
+     * Antenna Connected/Disconnected.
+     */
+    public void antennaStateChanged(boolean status, int frontendIndex) {
+        FrontendManager.setAntennaState(frontendIndex, status);
+        /**
+         * React only if antenna is disconnected on live route, or it is
+         * connected.
+         */
+        int routeId = FrontendManager
+                .getLiveRouteByFrontendIndex(frontendIndex);
+        if ((!status && routeId == mCurrentLiveRoute) || status) {
+            /** Stop PVR record if it is active. */
+            if (!status && mPvrManager.isPvrActive()) {
+                mPvrManager.stopPvr();
+            }
         }
     }
 
