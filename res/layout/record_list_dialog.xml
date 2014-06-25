@@ -38,14 +38,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Sort by name ascending" />
+                android:text="@string/sort_name_asc" />
             <Button
                 android:id="@+id/buttonSortByNameDesc"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
                 android:layout_weight="1"
-                android:text="Sort by name descending" />
+                android:text="@string/sort_name_desc" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/dummyLayout2"
@@ -58,14 +58,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Sort by duration ascending" />
+                android:text="@string/sort_duration_asc" />
             <Button
                 android:id="@+id/buttonSortByDurationDesc"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
                 android:layout_weight="1"
-                android:text="Sort by duration descending" />
+                android:text="@string/sort_duration_desc" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/dummyLayout3"
@@ -78,14 +78,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Sort by date ascending" />
+                android:text="@string/sort_date_asc" />
             <Button
                 android:id="@+id/buttonSortByDateDesc"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
                 android:layout_weight="1"
-                android:text="Sort by date descending" />
+                android:text="@string/sort_date_desc" />
         </LinearLayout>
         <ListView
             android:id="@+id/listViewRecords"
@@ -110,7 +110,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Title:"
+                android:text="@string/title"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
             <TextView
                 android:id="@+id/textViewMediaTitle"
@@ -127,7 +127,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Description:"
+                android:text="@string/desc"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
             <TextView
                 android:id="@+id/textViewMediaDescription"
@@ -144,7 +144,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Start time:"
+                android:text="@string/start_time"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
             <TextView
                 android:id="@+id/textViewMediaStartTime"
@@ -161,7 +161,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Duration:"
+                android:text="@string/duration"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
             <TextView
                 android:id="@+id/textViewMediaDuration"
@@ -178,7 +178,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Record size:"
+                android:text="@string/record_size"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
             <TextView
                 android:id="@+id/textViewMediaSize"
