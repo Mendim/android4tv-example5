@@ -26,14 +26,6 @@
         android:orderInCategory="100"
         android:title="Open PVR playlist"/>
     <item
-        android:id="@+id/menu_scheduled_records"
-        android:orderInCategory="100"
-        android:title="Open PVR scheduled records"/>
-    <item
-        android:id="@+id/menu_reminders"
-        android:orderInCategory="100"
-        android:title="Open list of reminders"/>
-    <item
         android:orderInCategory="100"
         android:title="Timeshift settings">
         <menu>
@@ -51,4 +43,8 @@
             </group>
         </menu>
     </item>
+    <item
+        android:id="@+id/menu_version"
+        android:orderInCategory="100"
+        android:title="@string/sw_version"/>
 </menu>

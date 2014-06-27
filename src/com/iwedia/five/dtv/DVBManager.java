@@ -26,6 +26,7 @@ import com.iwedia.dtv.route.common.RouteInputOutputDescriptor;
 import com.iwedia.dtv.service.IServiceControl;
 import com.iwedia.dtv.service.ServiceDescriptor;
 import com.iwedia.dtv.service.SourceType;
+import com.iwedia.dtv.swupdate.SWVersionType;
 import com.iwedia.dtv.types.InternalException;
 import com.iwedia.five.DTVActivity;
 import com.iwedia.five.callbacks.ScanCallBack;
@@ -537,7 +538,18 @@ public class DVBManager {
             if (!status && mPvrManager.isPvrActive()) {
                 mPvrManager.stopPvr();
             }
+            if (!status && mPvrManager.isTimeShftActive()) {
+                try {
+                    mPvrManager.stopTimeShift();
+                } catch (InternalException e) {
+                    e.printStackTrace();
+                }
+            }
         }
+    }
+
+    public String getSwVersion(SWVersionType type) {
+        return mDTVManager.getSoftwareUpdateControl().getSWVersion(type);
     }
 
     public boolean isIpAndSomeOtherTunerType() {

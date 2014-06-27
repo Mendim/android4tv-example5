@@ -31,4 +31,9 @@
     <string name="start_time">Start time:</string>
     <string name="duration">Duration:</string>
     <string name="record_size">Record size:</string>
+    <string name="sw_version">Software version</string>
+    <string name="app_version">Application version:</string>
+    <string name="framework_version">Framework version:</string>
+    <string name="middleware_version">Middleware version:</string>
+    <string name="sdk_version">SDK version:</string>
 </resources>
