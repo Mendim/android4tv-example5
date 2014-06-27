@@ -19,6 +19,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnErrorListener;
@@ -27,8 +28,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Display;
 import android.view.KeyEvent;
-import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.SurfaceView;
@@ -99,8 +100,6 @@ public class PvrActivity extends DTVActivity implements
     private SurfaceView mSurfaceView;
     private ChannelListDialog mChannelListDialog;
     private RecordListDialog mRecordListDialog;
-    private ScheduledRecordListDialog mScheduledRecordListDialog;
-    private ReminderListDialog mReminderListDialog;
     private AlertDialog mReminderDialog;
     private PopupMenu mPopup;
     /**
@@ -303,11 +302,21 @@ public class PvrActivity extends DTVActivity implements
             } else {
                 MediaInfo playBackRecord = mDVBManager.getPvrManager()
                         .getCurrentRecord();
-                Message.obtain(
-                        mHandler,
-                        UiHandler.REFRESH_PVR_RECORD_PLAYBACK,
-                        new PvrPlaybackPositionHolder(playBackRecord,
-                                pvrEventPlaybackPosition)).sendToTarget();
+                // FIXME This is temp solution, and should be deleted
+                if (pvrEventPlaybackPosition.getTimePosition() >= (playBackRecord
+                        .getDuration() - 2)) {
+                    try {
+                        mDVBManager.getPvrManager().stopPlayback();
+                    } catch (InternalException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Message.obtain(
+                            mHandler,
+                            UiHandler.REFRESH_PVR_RECORD_PLAYBACK,
+                            new PvrPlaybackPositionHolder(playBackRecord,
+                                    pvrEventPlaybackPosition)).sendToTarget();
+                }
             }
         }
 
@@ -468,14 +477,6 @@ public class PvrActivity extends DTVActivity implements
                 mRecordListDialog.show();
                 return true;
             }
-            case R.id.menu_scheduled_records: {
-                mScheduledRecordListDialog.show();
-                return true;
-            }
-            case R.id.menu_reminders: {
-                mReminderListDialog.show();
-                return true;
-            }
             case R.id.menu_timeshift_buffer_size_256: {
                 item.setChecked(true);
                 mDVBManager.getPvrManager().setTimeShiftBufferSize(256);
@@ -484,6 +485,13 @@ public class PvrActivity extends DTVActivity implements
             case R.id.menu_timeshift_buffer_size_512: {
                 item.setChecked(true);
                 mDVBManager.getPvrManager().setTimeShiftBufferSize(512);
+                return true;
+            }
+            case R.id.menu_version: {
+                Display display = getWindowManager().getDefaultDisplay();
+                Point size = new Point();
+                display.getSize(size);
+                new SoftwareVersionDialog(this, size.x, size.y).show();
                 return true;
             }
             default:
@@ -554,8 +562,6 @@ public class PvrActivity extends DTVActivity implements
     private void initializeDialogs() {
         mChannelListDialog = new ChannelListDialog(this);
         mRecordListDialog = new RecordListDialog(this);
-        mScheduledRecordListDialog = new ScheduledRecordListDialog(this);
-        mReminderListDialog = new ReminderListDialog(this);
         OnCancelListener listener = new OnCancelListener() {
             @Override
             public void onCancel(DialogInterface dialog) {
@@ -564,8 +570,6 @@ public class PvrActivity extends DTVActivity implements
         };
         mChannelListDialog.setOnCancelListener(listener);
         mRecordListDialog.setOnCancelListener(listener);
-        mScheduledRecordListDialog.setOnCancelListener(listener);
-        mReminderListDialog.setOnCancelListener(listener);
         /**
          * Initialize alert dialog.
          */
@@ -628,6 +632,17 @@ public class PvrActivity extends DTVActivity implements
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (mDVBManager.getPvrManager().isPvrActive() && !isPvrKey(keyCode)) {
+            return true;
+        }
+        if (mDVBManager.getPvrManager().isTimeShftActive()
+                && !isTimeShiftKey(keyCode)) {
+            return true;
+        }
+        if (mDVBManager.getPvrManager().isPvrPlaybackActive()
+                && !isPvrPlaybackKey(keyCode)) {
+            return true;
+        }
         if (keyCode == KeyEvent.KEYCODE_MENU) {
             onClickMenu(null);
             return true;
@@ -696,7 +711,8 @@ public class PvrActivity extends DTVActivity implements
             /** TELETEXT KEY */
             case KeyEvent.KEYCODE_T:
             case KeyEvent.KEYCODE_F5: {
-                if (mDVBManager.getPvrManager().isPvrPlaybackActive()) {
+                if (mDVBManager.getPvrManager().isPvrPlaybackActive()
+                        || mDVBManager.getPvrManager().isTimeShftActive()) {
                     /** TTX is already active */
                     if (mDVBManager.getPvrManager().isTeletextActive()) {
                         try {
@@ -773,7 +789,8 @@ public class PvrActivity extends DTVActivity implements
             /** SUBTITLES KEY. */
             case KeyEvent.KEYCODE_S:
             case KeyEvent.KEYCODE_CAPTIONS: {
-                if (mDVBManager.getPvrManager().isPvrPlaybackActive()) {
+                if (mDVBManager.getPvrManager().isPvrPlaybackActive()
+                        || mDVBManager.getPvrManager().isTimeShftActive()) {
                     /** Hide subtitles. */
                     if (mDVBManager.getPvrManager().isSubtitleActive()) {
                         try {
@@ -849,7 +866,8 @@ public class PvrActivity extends DTVActivity implements
              */
             case KeyEvent.KEYCODE_A:
             case KeyEvent.KEYCODE_F6: {
-                if (mDVBManager.getPvrManager().isPvrPlaybackActive()) {
+                if (mDVBManager.getPvrManager().isPvrPlaybackActive()
+                        || mDVBManager.getPvrManager().isTimeShftActive()) {
                     int trackCount = mDVBManager.getPvrManager()
                             .getAudioLanguagesTrackCount();
                     if (trackCount > 0) {
@@ -1160,7 +1178,11 @@ public class PvrActivity extends DTVActivity implements
     private boolean isPvrKey(int keyCode) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_INFO:
-            case KeyEvent.KEYCODE_MEDIA_STOP: {
+            case KeyEvent.KEYCODE_MEDIA_STOP:
+                /** Volume */
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_VOLUME_MUTE: {
                 return true;
             }
             default:
@@ -1196,7 +1218,11 @@ public class PvrActivity extends DTVActivity implements
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
             case KeyEvent.KEYCODE_MEDIA_REWIND:
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-            case KeyEvent.KEYCODE_MEDIA_STOP: {
+            case KeyEvent.KEYCODE_MEDIA_STOP:
+                /** Volume */
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_VOLUME_MUTE: {
                 return true;
             }
             default:
@@ -1233,6 +1259,7 @@ public class PvrActivity extends DTVActivity implements
             case KeyEvent.KEYCODE_PROG_GREEN:
             case KeyEvent.KEYCODE_PROG_BLUE:
             case KeyEvent.KEYCODE_PROG_YELLOW:
+                /** TTXT key */
             case KeyEvent.KEYCODE_F5:
             case KeyEvent.KEYCODE_T:
                 /** Audio languages key */
@@ -1240,7 +1267,11 @@ public class PvrActivity extends DTVActivity implements
             case KeyEvent.KEYCODE_F6:
                 /** Subtitle languages key */
             case KeyEvent.KEYCODE_S:
-            case KeyEvent.KEYCODE_CAPTIONS: {
+            case KeyEvent.KEYCODE_CAPTIONS:
+                /** Volume */
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_VOLUME_MUTE: {
                 return true;
             }
             default:
@@ -1261,7 +1292,20 @@ public class PvrActivity extends DTVActivity implements
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
             case KeyEvent.KEYCODE_MEDIA_REWIND:
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-            case KeyEvent.KEYCODE_MEDIA_STOP: {
+            case KeyEvent.KEYCODE_MEDIA_STOP:
+                /** TTXT key */
+            case KeyEvent.KEYCODE_F5:
+            case KeyEvent.KEYCODE_T:
+                /** Audio languages key */
+            case KeyEvent.KEYCODE_A:
+            case KeyEvent.KEYCODE_F6:
+                /** Subtitle languages key */
+            case KeyEvent.KEYCODE_S:
+            case KeyEvent.KEYCODE_CAPTIONS:
+                /** Volume */
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_VOLUME_MUTE: {
                 return true;
             }
             default:
@@ -1360,6 +1404,13 @@ public class PvrActivity extends DTVActivity implements
          */
         if (mDVBManager.getPvrManager().isPvrActive()) {
             mDVBManager.getPvrManager().stopPvr();
+        }
+        if (mDVBManager.getPvrManager().isTimeShftActive()) {
+            try {
+                mDVBManager.getPvrManager().stopTimeShift();
+            } catch (InternalException e) {
+                e.printStackTrace();
+            }
         }
         mDVBManager.getPvrManager().setMediaPath(null);
         runOnUiThread(new Runnable() {
