@@ -242,6 +242,15 @@ public class PvrActivity extends DTVActivity implements
 
         @Override
         public void eventRecordAdd(PvrEventRecordAdd arg0) {
+            Log.d(TAG, "RECORD WILL START SOON");
+            PvrActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(PvrActivity.this,
+                            "Recording will start soon", Toast.LENGTH_SHORT)
+                            .show();
+                }
+            });
         }
 
         @Override
